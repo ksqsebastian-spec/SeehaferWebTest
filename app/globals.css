@@ -36,18 +36,6 @@ body {
   cursor: none;
 }
 
-/* Subtle grid overlay */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(53, 49, 31, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(53, 49, 31, 0.055) 1px, transparent 1px);
-  background-size: 80px 80px;
-  pointer-events: none;
-  z-index: 0;
-}
 
 main {
   position: relative;

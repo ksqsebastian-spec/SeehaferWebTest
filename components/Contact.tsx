@@ -8,40 +8,59 @@ export default function Contact() {
         display: "grid",
         gridTemplateColumns: "42% 1fr",
         minHeight: "100vh",
+        background: "#19170e",
       }}
     >
-      {/* Left — full-height photo */}
+      {/* Left — full-height image swiper area */}
       <div style={{ position: "relative", overflow: "hidden" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/proj-07.jpg"
           alt="Seehafer Elemente Handwerk"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
         />
       </div>
 
-      {/* Right — dark column */}
+      {/* Right — dark column with content + footer */}
       <div
         style={{
-          background: "#19170e",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          padding: "clamp(48px, 6vw, 96px)",
+          padding: 40,
+          minHeight: "100vh",
         }}
       >
+        {/* Spacer top */}
         <div />
 
         {/* Main content */}
-        <div data-aos="fade-up">
-          <h2
+        <div>
+          <h1
             style={{
-              fontSize: "clamp(32px, 4.5vw, 68px)",
+              fontSize: 32,
               fontWeight: 700,
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
-              color: "#ffffff",
-              marginBottom: 48,
+              color: "#9b926a",
+              marginBottom: 24,
+            }}
+          >
+            Kontakt
+          </h1>
+
+          <p
+            style={{
+              fontSize: "clamp(48px, 5.5vw, 80px)",
+              fontWeight: 400,
+              color: "#9b926a",
+              letterSpacing: "-0.01em",
+              lineHeight: 1.1,
+              marginBottom: "clamp(40px, 5vw, 64px)",
             }}
           >
             Präzises Handwerk.
@@ -49,68 +68,254 @@ export default function Contact() {
             Unvergleichliche
             <br />
             Qualität.
-          </h2>
+          </p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <a
-              href="tel:+4900000000000"
+          {/* Contact details — DL structure matching real site */}
+          <dl style={{ margin: 0 }}>
+            <div
               style={{
-                fontSize: "clamp(14px, 1.1vw, 16px)",
-                color: "rgba(255,255,255,0.5)",
-                textDecoration: "none",
-                letterSpacing: "0.02em",
-                transition: "color 0.2s ease",
+                padding: "16px 0",
+                borderTop: "1px solid rgba(155,146,106,0.2)",
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ffffff")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)")}
             >
-              +49 (0) 000 000 000
-            </a>
-            <a
-              href="mailto:info@seehafer-elemente.de"
+              <dt
+                style={{
+                  fontSize: 28,
+                  fontWeight: 400,
+                  color: "#9b926a",
+                  letterSpacing: "-0.01em",
+                  marginBottom: 4,
+                }}
+              >
+                Telefon
+              </dt>
+              <dd style={{ margin: 0 }}>
+                <a
+                  href="tel:+4900000000000"
+                  style={{
+                    fontSize: 28,
+                    fontWeight: 400,
+                    color: "#9b926a",
+                    textDecoration: "none",
+                    letterSpacing: "-0.01em",
+                    transition: "color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLElement).style.color = "#fff")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLElement).style.color = "#9b926a")
+                  }
+                >
+                  +49 (0) 000 000 000
+                </a>
+              </dd>
+            </div>
+
+            <div
               style={{
-                fontSize: "clamp(14px, 1.1vw, 16px)",
-                color: "#9b926a",
-                textDecoration: "none",
-                letterSpacing: "0.02em",
-                borderBottom: "1px solid rgba(155,146,106,0.4)",
-                paddingBottom: 2,
-                alignSelf: "flex-start",
-                transition: "color 0.2s ease",
+                padding: "16px 0",
+                borderTop: "1px solid rgba(155,146,106,0.2)",
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ffffff")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#9b926a")}
             >
-              info@seehafer-elemente.de
-            </a>
-          </div>
+              <dt
+                style={{
+                  fontSize: 28,
+                  fontWeight: 400,
+                  color: "#9b926a",
+                  letterSpacing: "-0.01em",
+                  marginBottom: 4,
+                }}
+              >
+                E-Mail
+              </dt>
+              <dd style={{ margin: 0 }}>
+                <a
+                  href="mailto:info@seehafer-elemente.de"
+                  style={{
+                    fontSize: 28,
+                    fontWeight: 400,
+                    color: "#9b926a",
+                    textDecoration: "none",
+                    letterSpacing: "-0.01em",
+                    transition: "color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLElement).style.color = "#fff")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLElement).style.color = "#9b926a")
+                  }
+                >
+                  info@seehafer-elemente.de
+                </a>
+              </dd>
+            </div>
+          </dl>
         </div>
 
-        {/* Footer row */}
-        <div
+        {/* Footer — integrated into contact page */}
+        <footer
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            color: "rgba(255,255,255,0.6)",
+            fontSize: 14,
             paddingTop: 40,
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            flexWrap: "wrap",
-            gap: 12,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Logo */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 16,
+            }}
+          >
             <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
-              <path d="M2 2L2 20L7 20L7 12L11 20L15 12L15 20L20 20L20 2L15 2L11 10L7 2L2 2Z"
-                fill="none" stroke="#9b926a" strokeWidth="1.5" strokeLinejoin="round" />
+              <path
+                d="M17 5.5C17 3.57 14.31 2 11 2C7.69 2 5 3.57 5 5.5C5 7.43 7.69 9 11 9C14.31 9 17 10.57 17 12.5C17 14.43 14.31 16 11 16C7.69 16 5 14.43 5 12.5"
+                stroke="#fff"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
-            <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9b926a", fontWeight: 400 }}>
+            <span
+              style={{
+                fontSize: 13,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "#fff",
+                fontWeight: 400,
+              }}
+            >
               Seehafer Elemente
             </span>
           </div>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: "0.04em" }}>
-            © {new Date().getFullYear()}
-          </span>
-        </div>
+
+          {/* Bottom row */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <span>&copy; {new Date().getFullYear()} Seehafer Elemente</span>
+              <a
+                href="/datenschutz"
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  textDecoration: "underline",
+                  textUnderlineOffset: 2,
+                  textDecorationThickness: 1,
+                  transition: "color 0.15s ease",
+                }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLElement).style.color = "#fff")
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLElement).style.color =
+                    "rgba(255,255,255,0.6)")
+                }
+              >
+                Datenschutz
+              </a>
+              <a
+                href="/impressum"
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  textDecoration: "underline",
+                  textUnderlineOffset: 2,
+                  textDecorationThickness: 1,
+                  transition: "color 0.15s ease",
+                }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLElement).style.color = "#fff")
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLElement).style.color =
+                    "rgba(255,255,255,0.6)")
+                }
+              >
+                Impressum
+              </a>
+            </div>
+
+            {/* Social icons */}
+            <div style={{ display: "flex", gap: 16 }}>
+              <a
+                href="#"
+                aria-label="Instagram"
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  textDecoration: "none",
+                  transition: "color 0.15s ease",
+                }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLElement).style.color = "#fff")
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLElement).style.color =
+                    "rgba(255,255,255,0.6)")
+                }
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="5" />
+                  <circle cx="12" cy="12" r="5" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+                </svg>
+              </a>
+              <a
+                href="#"
+                aria-label="Facebook"
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  textDecoration: "none",
+                  transition: "color 0.15s ease",
+                }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLElement).style.color = "#fff")
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLElement).style.color =
+                    "rgba(255,255,255,0.6)")
+                }
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </footer>
       </div>
     </section>
   );

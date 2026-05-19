@@ -2,7 +2,6 @@ import Navbar from "@/components/Navbar";
 import Profile from "@/components/Profile";
 import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
-import AOSInit from "@/components/AOSInit";
 
 export const metadata = {
   title: "Profil | Seehafer Elemente",
@@ -12,7 +11,6 @@ export const metadata = {
 export default function ProfilPage() {
   return (
     <>
-      <AOSInit />
       <Cursor />
       <Navbar />
       <main>

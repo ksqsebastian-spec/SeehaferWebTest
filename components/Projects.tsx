@@ -2,21 +2,36 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
-const projects = [
-  { name: "Mühlenberg Bad", category: "Badezimmer", img: "/images/proj-01.jpg", x: 15, y: 8, w: 300, h: 450 },
-  { name: "Seestraße Terrasse", category: "Außenbereich", img: "/images/proj-02.jpg", x: 55, y: 5, w: 450, h: 300 },
-  { name: "Bergkamp Bad", category: "Badezimmer", img: "/images/proj-03.jpg", x: 80, y: 25, w: 200, h: 300 },
-  { name: "Seeblick Pool", category: "Pool", img: "/images/proj-04.jpg", x: 5, y: 45, w: 360, h: 240 },
-  { name: "Waldstraße Küche", category: "Küche", img: "/images/proj-05.jpg", x: 35, y: 40, w: 450, h: 300 },
-  { name: "Lindenallee Wohnen", category: "Wohnbereich", img: "/images/proj-06.jpg", x: 70, y: 50, w: 240, h: 360 },
-  { name: "Kalkstein Fassade", category: "Naturstein", img: "/images/proj-07.jpg", x: 10, y: 70, w: 280, h: 420 },
-  { name: "Panorama Dusche", category: "Badezimmer", img: "/images/proj-08.jpg", x: 42, y: 65, w: 400, h: 267 },
-  { name: "Eichenweg Küche", category: "Küche", img: "/images/proj-09.jpg", x: 75, y: 72, w: 300, h: 450 },
-  { name: "Gartenpfad Projekt", category: "Garten", img: "/images/proj-10.jpg", x: 25, y: 80, w: 350, h: 233 },
+interface CardDef {
+  col: number;
+  align: "flex-start" | "flex-end" | "center";
+  w: number;
+  h: number;
+  src: string;
+  name: string;
+  category: string;
+}
+
+const ROW1_CARDS: CardDef[] = [
+  { col: 1, align: "center",     w: 300, h: 450, src: "/images/proj-01.jpg", name: "Mühlenberg Bad",       category: "Badezimmer" },
+  { col: 2, align: "flex-start", w: 240, h: 160, src: "/images/proj-02.jpg", name: "Seestraße Terrasse",   category: "Außenbereich" },
+  { col: 3, align: "flex-end",   w: 240, h: 360, src: "/images/proj-03.jpg", name: "Bergkamp Bad",         category: "Badezimmer" },
+  { col: 4, align: "center",     w: 360, h: 240, src: "/images/proj-04.jpg", name: "Seeblick Pool",        category: "Pool" },
+  { col: 5, align: "flex-start", w: 300, h: 450, src: "/images/proj-05.jpg", name: "Waldstraße Küche",     category: "Küche" },
+  { col: 6, align: "flex-end",   w: 450, h: 300, src: "/images/proj-06.jpg", name: "Lindenallee Wohnen",   category: "Wohnbereich" },
+  { col: 7, align: "center",     w: 160, h: 240, src: "/images/proj-07.jpg", name: "Kalkstein Fassade",    category: "Naturstein" },
 ];
 
-const CANVAS_W = 5000;
-const CANVAS_H = 3500;
+const ROW2_CARDS: CardDef[] = [
+  { col: 1, align: "flex-start", w: 280, h: 420, src: "/images/proj-08.jpg", name: "Panorama Dusche",  category: "Badezimmer" },
+  { col: 2, align: "flex-end",   w: 400, h: 267, src: "/images/proj-09.jpg", name: "Eichenweg Küche",  category: "Küche" },
+  { col: 3, align: "center",     w: 350, h: 233, src: "/images/proj-10.jpg", name: "Gartenpfad Projekt", category: "Garten" },
+];
+
+const ALL_CARDS = [...ROW1_CARDS, ...ROW2_CARDS];
+
+const CANVAS_W = 4450;
+const CANVAS_H = 2870;
 
 export default function Projects() {
   const wrapRef   = useRef<HTMLDivElement>(null);
@@ -131,111 +146,212 @@ export default function Projects() {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       style={{
-        position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden",
-        cursor: "grab",
-        userSelect: "none",
+        position:    "fixed",
+        inset:       0,
+        width:       "100vw",
+        height:      "100vh",
+        overflow:    "hidden",
+        cursor:      "grab",
+        userSelect:  "none",
         touchAction: "none",
-        background: "var(--color-bg, #ebe8e2)",
+        background:  "#e9e4df",
       }}
     >
+      {/* SVG grid tile overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "url(/tile-bg.svg)",
+          opacity: 1,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+
       {/* Background text */}
       <div
         ref={bgTextRef}
         style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          zIndex: 0,
+          position:      "absolute",
+          top:           "50%",
+          left:          "50%",
+          transform:     "translate(-50%, -50%)",
+          zIndex:        1,
           pointerEvents: "none",
-          whiteSpace: "nowrap",
+          whiteSpace:    "nowrap",
         }}
       >
         <span
           style={{
-            fontSize: "clamp(80px, 15vw, 240px)",
-            fontWeight: 700,
-            color: "rgba(53,49,31,0.06)",
-            letterSpacing: "-0.02em",
-            lineHeight: 1,
+            fontSize:      "clamp(80px, 15vw, 240px)",
+            fontWeight:    400,
+            color:         "#fff",
+            letterSpacing: "-0.01em",
+            lineHeight:    0.95,
           }}
         >
           Projekte
         </span>
       </div>
 
-      {/* Canvas */}
+      {/* Canvas with CSS Grid rows */}
       <div
         ref={canvasRef}
         style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          width: CANVAS_W,
-          height: CANVAS_H,
-          transform: "translate(-50%, -50%)",
-          willChange: "transform",
+          position:       "absolute",
+          top:            "50%",
+          left:           "50%",
+          width:          CANVAS_W,
+          height:         CANVAS_H,
+          transform:      "translate(-50%, -50%)",
+          willChange:     "transform",
+          display:        "flex",
+          flexDirection:  "column",
+          gap:            200,
+          justifyContent: "center",
         }}
       >
-        {projects.map((p, i) => (
-          <div
-            key={i}
-            ref={el => { cardRefs.current[i] = el; }}
-            onMouseEnter={() => onCardEnter(i)}
-            onMouseLeave={() => onCardLeave(i)}
-            style={{
-              position: "absolute",
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-              width: p.w,
-              height: p.h,
-              zIndex: 2,
-              overflow: "hidden",
-              borderRadius: 2,
-              transition: "transform 0.4s cubic-bezier(0.85,0.09,0.15,0.91)",
-              willChange: "transform",
-              cursor: "pointer",
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              ref={el => { imgRefs.current[i] = el; }}
-              src={p.img}
-              alt={p.name}
-              draggable="false"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-                transition: "transform 0.6s cubic-bezier(0.85,0.09,0.15,0.91)",
-                willChange: "transform",
-              }}
-            />
+        {/* Row 1 */}
+        <div
+          style={{
+            display: "grid",
+            gridAutoFlow: "column",
+            gridTemplateColumns: ROW1_CARDS.map(c => `${c.w}px`).join(" "),
+            gap: 300,
+            justifyContent: "space-around",
+            alignItems: "center",
+          }}
+        >
+          {ROW1_CARDS.map((card, i) => (
             <div
+              key={i}
+              ref={el => { cardRefs.current[i] = el; }}
+              onMouseEnter={() => onCardEnter(i)}
+              onMouseLeave={() => onCardLeave(i)}
               style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                padding: "40px 14px 14px",
-                background: "linear-gradient(to top, rgba(53,49,31,0.6) 0%, transparent 100%)",
-                pointerEvents: "none",
+                gridColumn: card.col,
+                gridRow: 1,
+                alignSelf: card.align,
+                width: card.w,
+                height: card.h,
+                overflow: "hidden",
+                borderRadius: 2,
+                transition: "transform 0.4s cubic-bezier(0.85,0.09,0.15,0.91)",
+                willChange: "transform",
+                cursor: "pointer",
+                zIndex: 2,
+                position: "relative",
               }}
             >
-              <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>
-                {p.category}
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 300, color: "#fff", letterSpacing: "-0.01em" }}>
-                {p.name}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                ref={el => { imgRefs.current[i] = el; }}
+                src={card.src}
+                alt={card.name}
+                draggable="false"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                  transition: "transform 0.6s cubic-bezier(0.85,0.09,0.15,0.91)",
+                  willChange: "transform",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  padding: "40px 14px 14px",
+                  background: "linear-gradient(to top, rgba(35,30,18,0.6) 0%, transparent 100%)",
+                  pointerEvents: "none",
+                }}
+              >
+                <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>
+                  {card.category}
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 300, color: "#fff", letterSpacing: "-0.01em" }}>
+                  {card.name}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        {/* Row 2 */}
+        <div
+          style={{
+            display: "grid",
+            gridAutoFlow: "column",
+            gridTemplateColumns: ROW2_CARDS.map(c => `${c.w}px`).join(" "),
+            gap: 300,
+            justifyContent: "space-around",
+            alignItems: "center",
+          }}
+        >
+          {ROW2_CARDS.map((card, i) => {
+            const idx = ROW1_CARDS.length + i;
+            return (
+              <div
+                key={i}
+                ref={el => { cardRefs.current[idx] = el; }}
+                onMouseEnter={() => onCardEnter(idx)}
+                onMouseLeave={() => onCardLeave(idx)}
+                style={{
+                  gridColumn: card.col,
+                  gridRow: 1,
+                  alignSelf: card.align,
+                  width: card.w,
+                  height: card.h,
+                  overflow: "hidden",
+                  borderRadius: 2,
+                  transition: "transform 0.4s cubic-bezier(0.85,0.09,0.15,0.91)",
+                  willChange: "transform",
+                  cursor: "pointer",
+                  zIndex: 2,
+                  position: "relative",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={el => { imgRefs.current[idx] = el; }}
+                  src={card.src}
+                  alt={card.name}
+                  draggable="false"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    transition: "transform 0.6s cubic-bezier(0.85,0.09,0.15,0.91)",
+                    willChange: "transform",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    padding: "40px 14px 14px",
+                    background: "linear-gradient(to top, rgba(35,30,18,0.6) 0%, transparent 100%)",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>
+                    {card.category}
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 300, color: "#fff", letterSpacing: "-0.01em" }}>
+                    {card.name}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Drag hint */}
