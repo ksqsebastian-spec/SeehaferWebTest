@@ -1,8 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
-import AOSInit from "@/components/AOSInit";
 
 export const metadata = {
   title: "Kontakt | Seehafer Elemente",
@@ -12,13 +10,11 @@ export const metadata = {
 export default function KontaktPage() {
   return (
     <>
-      <AOSInit />
       <Cursor />
       <Navbar />
       <main>
         <Contact />
       </main>
-      <Footer />
     </>
   );
 }

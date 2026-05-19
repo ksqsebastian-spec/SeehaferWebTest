@@ -1,8 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Projects from "@/components/Projects";
-import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
-import AOSInit from "@/components/AOSInit";
 
 export const metadata = {
   title: "Projekte | Seehafer Elemente",
@@ -12,13 +10,11 @@ export const metadata = {
 export default function ProjektePage() {
   return (
     <>
-      <AOSInit />
       <Cursor />
       <Navbar />
       <main>
         <Projects />
       </main>
-      <Footer />
     </>
   );
 }

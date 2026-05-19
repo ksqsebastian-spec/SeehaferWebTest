@@ -2,13 +2,14 @@
 @import "aos/dist/aos.css";
 
 :root {
-  --color-bg: #f3efeb;
+  --color-bg: #ebe8e2;
   --color-text: rgba(53, 49, 31, 0.65);
   --color-text-strong: #35311f;
   --color-text-brand: #9b926a;
   --color-border: rgba(53, 49, 31, 0.15);
   --easing: cubic-bezier(0.85, 0.09, 0.15, 0.91);
   --container-max: 1600px;
+  --nav-height: 3rem;
 }
 
 * {
@@ -19,6 +20,11 @@
 
 html {
   scroll-behavior: smooth;
+  /* Hide native scrollbar without blocking scroll */
+  scrollbar-width: none; /* Firefox */
+}
+html::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 body {

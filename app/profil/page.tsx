@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Profile from "@/components/Profile";
-import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
 import AOSInit from "@/components/AOSInit";
@@ -18,7 +17,6 @@ export default function ProfilPage() {
       <Navbar />
       <main>
         <Profile />
-        <Testimonials />
       </main>
       <Footer />
     </>

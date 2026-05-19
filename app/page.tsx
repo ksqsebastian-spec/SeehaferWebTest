@@ -1,19 +1,15 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
-import AOSInit from "@/components/AOSInit";
 
 export default function Home() {
   return (
     <>
-      <AOSInit />
       <Cursor />
       <Navbar />
       <main>
         <Hero />
       </main>
-      <Footer />
     </>
   );
 }

@@ -1,179 +1,250 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 const projects = [
-  { id: 1, name: "Mühlenberg Bath", category: "Badezimmer", year: "2024", aspect: "landscape", img: "/images/proj-01.jpg" },
-  { id: 2, name: "Seestraße Terrasse", category: "Außenbereich", year: "2024", aspect: "portrait", img: "/images/proj-02.jpg" },
-  { id: 3, name: "Bergkamp Bad", category: "Badezimmer", year: "2023", aspect: "landscape", img: "/images/proj-03.jpg" },
-  { id: 4, name: "Seeblick Pool", category: "Pool", year: "2023", aspect: "portrait", img: "/images/proj-04.jpg" },
-  { id: 5, name: "Waldstraße Küche", category: "Küche", year: "2023", aspect: "landscape", img: "/images/proj-05.jpg" },
-  { id: 6, name: "Lindenallee Wohnen", category: "Wohnbereich", year: "2022", aspect: "portrait", img: "/images/proj-06.jpg" },
-  { id: 7, name: "Kalkstein Fassade", category: "Naturstein", year: "2022", aspect: "landscape", img: "/images/proj-07.jpg" },
-  { id: 8, name: "Panorama Dusche", category: "Badezimmer", year: "2022", aspect: "portrait", img: "/images/proj-08.jpg" },
-  { id: 9, name: "Eichenweg Küche", category: "Küche", year: "2021", aspect: "landscape", img: "/images/proj-09.jpg" },
-  { id: 10, name: "Gartenpfad Projekt", category: "Garten", year: "2021", aspect: "portrait", img: "/images/proj-10.jpg" },
+  { name: "Mühlenberg Bad", category: "Badezimmer", img: "/images/proj-01.jpg", x: 15, y: 8, w: 300, h: 450 },
+  { name: "Seestraße Terrasse", category: "Außenbereich", img: "/images/proj-02.jpg", x: 55, y: 5, w: 450, h: 300 },
+  { name: "Bergkamp Bad", category: "Badezimmer", img: "/images/proj-03.jpg", x: 80, y: 25, w: 200, h: 300 },
+  { name: "Seeblick Pool", category: "Pool", img: "/images/proj-04.jpg", x: 5, y: 45, w: 360, h: 240 },
+  { name: "Waldstraße Küche", category: "Küche", img: "/images/proj-05.jpg", x: 35, y: 40, w: 450, h: 300 },
+  { name: "Lindenallee Wohnen", category: "Wohnbereich", img: "/images/proj-06.jpg", x: 70, y: 50, w: 240, h: 360 },
+  { name: "Kalkstein Fassade", category: "Naturstein", img: "/images/proj-07.jpg", x: 10, y: 70, w: 280, h: 420 },
+  { name: "Panorama Dusche", category: "Badezimmer", img: "/images/proj-08.jpg", x: 42, y: 65, w: 400, h: 267 },
+  { name: "Eichenweg Küche", category: "Küche", img: "/images/proj-09.jpg", x: 75, y: 72, w: 300, h: 450 },
+  { name: "Gartenpfad Projekt", category: "Garten", img: "/images/proj-10.jpg", x: 25, y: 80, w: 350, h: 233 },
 ];
 
-function ProjectCard({ project, index }: { project: typeof projects[0]; index: number }) {
-  const [hovered, setHovered] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const cardRef = useRef<HTMLDivElement>(null);
+const CANVAS_W = 5000;
+const CANVAS_H = 3500;
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    setMousePos({
-      x: ((e.clientX - rect.left) / rect.width - 0.5) * 10,
-      y: ((e.clientY - rect.top) / rect.height - 0.5) * 10,
-    });
-  };
+export default function Projects() {
+  const wrapRef   = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const bgTextRef = useRef<HTMLDivElement>(null);
 
-  const isLandscape = project.aspect === "landscape";
+  const dispX = useRef(0);
+  const dispY = useRef(0);
+  const tgtX  = useRef(0);
+  const tgtY  = useRef(0);
+
+  const dragging  = useRef(false);
+  const startPtrX = useRef(0);
+  const startPtrY = useRef(0);
+  const startTgtX = useRef(0);
+  const startTgtY = useRef(0);
+
+  const velX  = useRef(0);
+  const velY  = useRef(0);
+  const prevX = useRef(0);
+  const prevY = useRef(0);
+
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const imgRefs  = useRef<(HTMLImageElement | null)[]>([]);
+  const rafId    = useRef<number | null>(null);
+
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  const lerp  = (a: number, b: number, t: number) => a + (b - a) * t;
+  const halfW = CANVAS_W / 2;
+  const halfH = CANVAS_H / 2;
+
+  const applyTransform = useCallback((tx: number, ty: number) => {
+    if (canvasRef.current) {
+      canvasRef.current.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px))`;
+    }
+    if (bgTextRef.current) {
+      bgTextRef.current.style.transform = `translate(-50%, -50%) translate(${tx * 0.05}px, ${ty * 0.05}px)`;
+    }
+  }, []);
+
+  useEffect(() => {
+    const tick = () => {
+      if (!dragging.current) {
+        velX.current *= 0.92;
+        velY.current *= 0.92;
+        if (Math.abs(velX.current) > 0.1 || Math.abs(velY.current) > 0.1) {
+          tgtX.current = clamp(tgtX.current + velX.current, -(halfW / 2), halfW / 2);
+          tgtY.current = clamp(tgtY.current + velY.current, -(halfH / 2), halfH / 2);
+        }
+      }
+      dispX.current = lerp(dispX.current, tgtX.current, 0.08);
+      dispY.current = lerp(dispY.current, tgtY.current, 0.08);
+      applyTransform(dispX.current, dispY.current);
+      rafId.current = requestAnimationFrame(tick);
+    };
+    rafId.current = requestAnimationFrame(tick);
+    return () => { if (rafId.current) cancelAnimationFrame(rafId.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    dragging.current  = true;
+    startPtrX.current = e.clientX;
+    startPtrY.current = e.clientY;
+    startTgtX.current = tgtX.current;
+    startTgtY.current = tgtY.current;
+    prevX.current     = e.clientX;
+    prevY.current     = e.clientY;
+    velX.current      = 0;
+    velY.current      = 0;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    if (wrapRef.current) wrapRef.current.style.cursor = "grabbing";
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging.current) return;
+    const dx = e.clientX - startPtrX.current;
+    const dy = e.clientY - startPtrY.current;
+    tgtX.current = clamp(startTgtX.current + dx, -(halfW / 2), halfW / 2);
+    tgtY.current = clamp(startTgtY.current + dy, -(halfH / 2), halfH / 2);
+    velX.current = e.clientX - prevX.current;
+    velY.current = e.clientY - prevY.current;
+    prevX.current = e.clientX;
+    prevY.current = e.clientY;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
+    if (wrapRef.current) wrapRef.current.style.cursor = "grab";
+  }, []);
+
+  const onCardEnter = useCallback((i: number) => {
+    const card = cardRefs.current[i];
+    const img  = imgRefs.current[i];
+    if (card) { card.style.transform = "scale(1.03)"; card.style.zIndex = "10"; }
+    if (img) img.style.transform = "scale(1.08)";
+  }, []);
+
+  const onCardLeave = useCallback((i: number) => {
+    const card = cardRefs.current[i];
+    const img  = imgRefs.current[i];
+    if (card) { card.style.transform = "scale(1)"; card.style.zIndex = "2"; }
+    if (img) img.style.transform = "scale(1)";
+  }, []);
 
   return (
     <div
-      ref={cardRef}
-      data-aos="fade-up"
-      data-aos-delay={Math.min(index * 60, 300)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false);
-        setMousePos({ x: 0, y: 0 });
-      }}
-      onMouseMove={handleMouseMove}
+      ref={wrapRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
       style={{
-        gridColumn: isLandscape ? "span 2" : "span 1",
-        aspectRatio: isLandscape ? "16/9" : "3/4",
-        borderRadius: 4,
+        position: "fixed",
+        inset: 0,
+        width: "100vw",
+        height: "100vh",
         overflow: "hidden",
-        position: "relative",
-        cursor: "none",
-        transition: "transform 0.6s cubic-bezier(0.85,0.09,0.15,0.91)",
-        transform: hovered
-          ? `perspective(1000px) rotateX(${-mousePos.y * 0.3}deg) rotateY(${mousePos.x * 0.3}deg) scale(1.01)`
-          : "perspective(1000px) rotateX(0) rotateY(0) scale(1)",
+        cursor: "grab",
+        userSelect: "none",
+        touchAction: "none",
+        background: "var(--color-bg, #ebe8e2)",
       }}
     >
-      {/* Real image with parallax */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={project.img}
-        alt={project.name}
-        style={{
-          position: "absolute",
-          inset: "-10%",
-          width: "120%",
-          height: "120%",
-          objectFit: "cover",
-          transform: hovered
-            ? `translate(${mousePos.x * 1.5}px, ${mousePos.y * 1.5}px) scale(1.05)`
-            : "translate(0, 0) scale(1)",
-          transition: "transform 0.6s cubic-bezier(0.85,0.09,0.15,0.91)",
-        }}
-      />
-
-      {/* Info overlay */}
+      {/* Background text */}
       <div
+        ref={bgTextRef}
         style={{
           position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-          padding: "24px 28px",
-          background: hovered
-            ? "linear-gradient(to top, rgba(53,49,31,0.75) 0%, transparent 60%)"
-            : "linear-gradient(to top, rgba(53,49,31,0.4) 0%, transparent 50%)",
-          transition: "background 0.4s ease",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 0,
+          pointerEvents: "none",
+          whiteSpace: "nowrap",
         }}
       >
-        <div
+        <span
           style={{
-            transform: hovered ? "translateY(0)" : "translateY(6px)",
-            opacity: hovered ? 1 : 0.85,
-            transition: "transform 0.4s var(--easing), opacity 0.4s ease",
+            fontSize: "clamp(80px, 15vw, 240px)",
+            fontWeight: 700,
+            color: "rgba(53,49,31,0.06)",
+            letterSpacing: "-0.02em",
+            lineHeight: 1,
           }}
         >
+          Projekte
+        </span>
+      </div>
+
+      {/* Canvas */}
+      <div
+        ref={canvasRef}
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          width: CANVAS_W,
+          height: CANVAS_H,
+          transform: "translate(-50%, -50%)",
+          willChange: "transform",
+        }}
+      >
+        {projects.map((p, i) => (
           <div
+            key={i}
+            ref={el => { cardRefs.current[i] = el; }}
+            onMouseEnter={() => onCardEnter(i)}
+            onMouseLeave={() => onCardLeave(i)}
             style={{
-              fontSize: "0.7rem",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.6)",
-              marginBottom: 6,
-              fontWeight: 400,
+              position: "absolute",
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: p.w,
+              height: p.h,
+              zIndex: 2,
+              overflow: "hidden",
+              borderRadius: 2,
+              transition: "transform 0.4s cubic-bezier(0.85,0.09,0.15,0.91)",
+              willChange: "transform",
+              cursor: "pointer",
             }}
           >
-            {project.category} · {project.year}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              ref={el => { imgRefs.current[i] = el; }}
+              src={p.img}
+              alt={p.name}
+              draggable="false"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+                transition: "transform 0.6s cubic-bezier(0.85,0.09,0.15,0.91)",
+                willChange: "transform",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: "40px 14px 14px",
+                background: "linear-gradient(to top, rgba(53,49,31,0.6) 0%, transparent 100%)",
+                pointerEvents: "none",
+              }}
+            >
+              <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>
+                {p.category}
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 300, color: "#fff", letterSpacing: "-0.01em" }}>
+                {p.name}
+              </div>
+            </div>
           </div>
-          <div
-            style={{
-              fontSize: "clamp(16px, 1.5vw, 22px)",
-              fontWeight: 300,
-              color: "#ffffff",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {project.name}
-          </div>
-        </div>
+        ))}
+      </div>
+
+      {/* Drag hint */}
+      <div style={{ position: "fixed", bottom: 36, right: 40, zIndex: 20, display: "flex", alignItems: "center", gap: 8, pointerEvents: "none" }}>
+        <span style={{ fontSize: 10, letterSpacing: "0.1em", color: "rgba(53,49,31,0.3)", textTransform: "uppercase" }}>Ziehen</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 0v12M0 6h12" stroke="rgba(53,49,31,0.3)" strokeWidth="1" strokeLinecap="round" />
+        </svg>
       </div>
     </div>
-  );
-}
-
-export default function Projects() {
-  return (
-    <section id="projects" style={{ padding: "120px 0 80px" }}>
-      <div className="container">
-        {/* Header */}
-        <div
-          data-aos="fade-up"
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            marginBottom: 64,
-            borderTop: "1px solid var(--color-border)",
-            paddingTop: 32,
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "clamp(11px, 0.9vw, 13px)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--color-text-brand)",
-              fontWeight: 400,
-            }}
-          >
-            Projekte
-          </h2>
-          <span
-            style={{
-              fontSize: 12,
-              color: "var(--color-text)",
-              letterSpacing: "0.05em",
-            }}
-          >
-            {projects.length} Arbeiten
-          </span>
-        </div>
-
-        {/* Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 12,
-          }}
-        >
-          {projects.map((p, i) => (
-            <ProjectCard key={p.id} project={p} index={i} />
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
