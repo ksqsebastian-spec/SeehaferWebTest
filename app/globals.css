@@ -1,0 +1,106 @@
+@import "tailwindcss";
+@import "aos/dist/aos.css";
+
+:root {
+  --color-bg: #f3efeb;
+  --color-text: rgba(53, 49, 31, 0.65);
+  --color-text-strong: #35311f;
+  --color-text-brand: #9b926a;
+  --color-border: rgba(53, 49, 31, 0.15);
+  --easing: cubic-bezier(0.85, 0.09, 0.15, 0.91);
+  --container-max: 1600px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-strong);
+  font-family: "Neue Montreal", "DM Sans", -apple-system, Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* Subtle grid overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(53, 49, 31, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(53, 49, 31, 0.055) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 20px;
+  }
+  body {
+    cursor: auto;
+  }
+}
+
+/* Custom cursor */
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background: var(--color-text-strong);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s var(--easing), height 0.3s var(--easing), background 0.3s ease;
+  mix-blend-mode: multiply;
+  will-change: transform;
+}
+
+.cursor.is-hovering {
+  width: 36px;
+  height: 36px;
+  background: var(--color-text-brand);
+  mix-blend-mode: normal;
+}
+
+/* AOS defaults */
+[data-aos] {
+  pointer-events: none;
+}
+[data-aos].aos-animate {
+  pointer-events: auto;
+}
+
+/* Swiper */
+.swiper-pagination-bullet {
+  background: var(--color-text-brand) !important;
+  opacity: 0.5;
+}
+.swiper-pagination-bullet-active {
+  background: var(--color-text-strong) !important;
+  opacity: 1;
+}
