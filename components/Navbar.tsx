@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const links = [
-  { label: "Projekte", href: "#projects" },
-  { label: "Profil", href: "#profile" },
-  { label: "Kontakt", href: "#contact" },
+  { label: "Projekte", href: "/projekte" },
+  { label: "Profil", href: "/profil" },
+  { label: "Kontakt", href: "/kontakt" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
@@ -29,7 +31,6 @@ export default function Navbar() {
         transition: "all 0.5s cubic-bezier(0.85, 0.09, 0.15, 0.91)",
       }}
     >
-      {/* Desktop nav pill */}
       <div
         style={{
           display: "flex",
@@ -43,8 +44,8 @@ export default function Navbar() {
         }}
       >
         {/* Logo mark */}
-        <a
-          href="#"
+        <Link
+          href="/"
           style={{
             display: "flex",
             alignItems: "center",
@@ -61,40 +62,44 @@ export default function Navbar() {
               strokeLinejoin="round"
             />
           </svg>
-        </a>
+        </Link>
 
         {/* Links */}
         <div
           className="nav-links"
           style={{ display: "flex", gap: 4, alignItems: "center" }}
         >
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              style={{
-                color: "rgba(255,255,255,0.75)",
-                textDecoration: "none",
-                fontSize: "0.8125rem",
-                fontWeight: 400,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                padding: "6px 14px",
-                borderRadius: 100,
-                transition: "color 0.2s ease, background 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#fff";
-                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)";
-                (e.currentTarget as HTMLElement).style.background = "transparent";
-              }}
-            >
-              {l.label}
-            </a>
-          ))}
+          {links.map((l) => {
+            const active = pathname === l.href;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                style={{
+                  color: active ? "#fff" : "rgba(255,255,255,0.75)",
+                  textDecoration: "none",
+                  fontSize: "0.8125rem",
+                  fontWeight: 400,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  padding: "6px 14px",
+                  borderRadius: 100,
+                  background: active ? "rgba(255,255,255,0.08)" : "transparent",
+                  transition: "color 0.2s ease, background 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.color = "#fff";
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.color = active ? "#fff" : "rgba(255,255,255,0.75)";
+                  (e.currentTarget as HTMLElement).style.background = active ? "rgba(255,255,255,0.08)" : "transparent";
+                }}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>

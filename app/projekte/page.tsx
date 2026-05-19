@@ -1,17 +1,22 @@
 import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
+import Projects from "@/components/Projects";
 import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
 import AOSInit from "@/components/AOSInit";
 
-export default function Home() {
+export const metadata = {
+  title: "Projekte | Seehafer Elemente",
+  description: "Ausgewählte Naturstein- und Fliesenprojekte von Seehafer Elemente.",
+};
+
+export default function ProjektePage() {
   return (
     <>
       <AOSInit />
       <Cursor />
       <Navbar />
       <main>
-        <Hero />
+        <Projects />
       </main>
       <Footer />
     </>

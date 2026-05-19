@@ -1,17 +1,22 @@
 import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
+import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
 import AOSInit from "@/components/AOSInit";
 
-export default function Home() {
+export const metadata = {
+  title: "Kontakt | Seehafer Elemente",
+  description: "Nehmen Sie Kontakt mit Seehafer Elemente auf.",
+};
+
+export default function KontaktPage() {
   return (
     <>
       <AOSInit />
       <Cursor />
       <Navbar />
       <main>
-        <Hero />
+        <Contact />
       </main>
       <Footer />
     </>

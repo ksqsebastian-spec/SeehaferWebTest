@@ -1,5 +1,14 @@
 "use client";
 
+import Link from "next/link";
+
+const footerLinks = [
+  { label: "Projekte", href: "/projekte" },
+  { label: "Profil", href: "/profil" },
+  { label: "Kontakt", href: "/kontakt" },
+  { label: "Impressum", href: "/impressum" },
+];
+
 export default function Footer() {
   return (
     <footer
@@ -30,10 +39,10 @@ export default function Footer() {
         </div>
 
         <nav style={{ display: "flex", gap: 24 }}>
-          {["Projekte", "Profil", "Kontakt", "Impressum"].map((label) => (
-            <a
-              key={label}
-              href={`#${label.toLowerCase()}`}
+          {footerLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
               style={{
                 fontSize: 12,
                 color: "rgba(255,255,255,0.3)",
@@ -49,8 +58,8 @@ export default function Footer() {
                 ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)")
               }
             >
-              {label}
-            </a>
+              {link.label}
+            </Link>
           ))}
         </nav>
       </div>

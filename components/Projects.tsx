@@ -3,16 +3,16 @@
 import { useRef, useState } from "react";
 
 const projects = [
-  { id: 1, name: "Ainslie Street", category: "Badezimmer", year: "2024", aspect: "landscape" },
-  { id: 2, name: "Beach Street", category: "Küche", year: "2024", aspect: "portrait" },
-  { id: 3, name: "Duncraig Road", category: "Außenbereich", year: "2023", aspect: "landscape" },
-  { id: 4, name: "Excelsior Street", category: "Wohnbereich", year: "2023", aspect: "portrait" },
-  { id: 5, name: "Forrest Street", category: "Badezimmer", year: "2023", aspect: "landscape" },
-  { id: 6, name: "Hubble Street", category: "Naturstein", year: "2022", aspect: "portrait" },
-  { id: 7, name: "Sewell Street", category: "Außenbereich", year: "2022", aspect: "landscape" },
-  { id: 8, name: "St. Leonards Ave", category: "Küche", year: "2022", aspect: "portrait" },
-  { id: 9, name: "Vivaldi Avenue", category: "Pool", year: "2021", aspect: "landscape" },
-  { id: 10, name: "Eco Outdoor", category: "Garten", year: "2021", aspect: "portrait" },
+  { id: 1, name: "Mühlenberg Bath", category: "Badezimmer", year: "2024", aspect: "landscape", img: "/images/proj-01.jpg" },
+  { id: 2, name: "Seestraße Terrasse", category: "Außenbereich", year: "2024", aspect: "portrait", img: "/images/proj-02.jpg" },
+  { id: 3, name: "Bergkamp Bad", category: "Badezimmer", year: "2023", aspect: "landscape", img: "/images/proj-03.jpg" },
+  { id: 4, name: "Seeblick Pool", category: "Pool", year: "2023", aspect: "portrait", img: "/images/proj-04.jpg" },
+  { id: 5, name: "Waldstraße Küche", category: "Küche", year: "2023", aspect: "landscape", img: "/images/proj-05.jpg" },
+  { id: 6, name: "Lindenallee Wohnen", category: "Wohnbereich", year: "2022", aspect: "portrait", img: "/images/proj-06.jpg" },
+  { id: 7, name: "Kalkstein Fassade", category: "Naturstein", year: "2022", aspect: "landscape", img: "/images/proj-07.jpg" },
+  { id: 8, name: "Panorama Dusche", category: "Badezimmer", year: "2022", aspect: "portrait", img: "/images/proj-08.jpg" },
+  { id: 9, name: "Eichenweg Küche", category: "Küche", year: "2021", aspect: "landscape", img: "/images/proj-09.jpg" },
+  { id: 10, name: "Gartenpfad Projekt", category: "Garten", year: "2021", aspect: "portrait", img: "/images/proj-10.jpg" },
 ];
 
 function ProjectCard({ project, index }: { project: typeof projects[0]; index: number }) {
@@ -45,7 +45,6 @@ function ProjectCard({ project, index }: { project: typeof projects[0]; index: n
       style={{
         gridColumn: isLandscape ? "span 2" : "span 1",
         aspectRatio: isLandscape ? "16/9" : "3/4",
-        background: "#e8e3dd",
         borderRadius: 4,
         overflow: "hidden",
         position: "relative",
@@ -56,28 +55,21 @@ function ProjectCard({ project, index }: { project: typeof projects[0]; index: n
           : "perspective(1000px) rotateX(0) rotateY(0) scale(1)",
       }}
     >
-      {/* Placeholder image layer with parallax */}
-      <div
+      {/* Real image with parallax */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={project.img}
+        alt={project.name}
         style={{
           position: "absolute",
           inset: "-10%",
-          background: `linear-gradient(135deg,
-            hsl(${30 + index * 8}, 20%, ${70 - index * 2}%) 0%,
-            hsl(${25 + index * 5}, 15%, ${60 - index * 2}%) 100%)`,
+          width: "120%",
+          height: "120%",
+          objectFit: "cover",
           transform: hovered
             ? `translate(${mousePos.x * 1.5}px, ${mousePos.y * 1.5}px) scale(1.05)`
             : "translate(0, 0) scale(1)",
           transition: "transform 0.6s cubic-bezier(0.85,0.09,0.15,0.91)",
-        }}
-      />
-
-      {/* Subtle texture */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='rgba(0,0,0,0.04)'/%3E%3C/svg%3E")`,
-          backgroundRepeat: "repeat",
         }}
       />
 
