@@ -218,8 +218,8 @@ export default function Hero() {
     velY.current      = 0;
     movedDistance.current = 0;
     wasDragging.current = false;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    if (wrapRef.current) wrapRef.current.style.cursor = "grabbing";
+    // Don't capture pointer yet — only do so once we know it's a drag.
+    // Capturing too early routes click events to the wrap instead of the card.
   }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -227,7 +227,12 @@ export default function Hero() {
     const dx = e.clientX - startPtrX.current;
     const dy = e.clientY - startPtrY.current;
     movedDistance.current = Math.max(movedDistance.current, Math.abs(dx) + Math.abs(dy));
-    if (movedDistance.current > 6) wasDragging.current = true;
+    if (movedDistance.current > 6 && !wasDragging.current) {
+      wasDragging.current = true;
+      try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
+      if (wrapRef.current) wrapRef.current.style.cursor = "grabbing";
+    }
+    if (!wasDragging.current) return; // no canvas movement until drag confirmed
     tgtX.current = clamp(startTgtX.current + dx, -(halfW / 2), halfW / 2);
     tgtY.current = clamp(startTgtY.current + dy, -(halfH / 2), halfH / 2);
     velX.current = e.clientX - prevX.current;
