@@ -55,6 +55,7 @@ function CardItem({
   imgRefs,
   onCardEnter,
   onCardLeave,
+  hoveredIdx,
 }: {
   card: CardDef;
   index: number;
@@ -62,7 +63,10 @@ function CardItem({
   imgRefs: React.MutableRefObject<(HTMLImageElement | null)[]>;
   onCardEnter: (i: number) => void;
   onCardLeave: (i: number) => void;
+  hoveredIdx: number | null;
 }) {
+  const isHovered = hoveredIdx === index;
+  const isFaded = hoveredIdx !== null && !isHovered;
   return (
     <Link
       href={`/projekte/${card.slug}`}
@@ -76,13 +80,15 @@ function CardItem({
         width: card.w,
         height: card.h,
         overflow: "hidden",
-        transition: "transform 0.45s cubic-bezier(0.85,0.09,0.15,0.91)",
-        willChange: "transform",
+        transition:
+          "transform 0.45s cubic-bezier(0.85,0.09,0.15,0.91), opacity 0.45s cubic-bezier(0.85,0.09,0.15,0.91)",
+        willChange: "transform, opacity",
         cursor: "pointer",
-        zIndex: 2,
+        zIndex: isHovered ? 10 : 2,
         position: "relative",
         display: "block",
         textDecoration: "none",
+        opacity: isFaded ? 0.25 : 1,
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -100,28 +106,35 @@ function CardItem({
           willChange: "transform",
         }}
       />
+      {/* Center-pill name label, appears on hover */}
       <div
         style={{
           position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: "32px 14px 14px",
-          background: "linear-gradient(to top, rgba(35,30,18,0.72) 0%, transparent 100%)",
+          top: "50%",
+          left: "50%",
+          transform: `translate(-50%, -50%) scale(${isHovered ? 1 : 0.9})`,
+          opacity: isHovered ? 1 : 0,
+          transition:
+            "opacity 0.35s cubic-bezier(0.16,1,0.3,1), transform 0.45s cubic-bezier(0.16,1,0.3,1)",
+          background: "rgba(35,30,18,0.85)",
+          backdropFilter: "blur(8px)",
+          color: "#fff",
+          padding: "12px 22px",
+          borderRadius: 999,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 12,
+          whiteSpace: "nowrap",
+          fontSize: 16,
+          fontWeight: 400,
+          letterSpacing: "-0.005em",
           pointerEvents: "none",
         }}
       >
-        <span
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.1em",
-            color: "rgba(255,255,255,0.75)",
-            textTransform: "uppercase",
-            fontWeight: 400,
-          }}
-        >
-          {card.name}
-        </span>
+        {card.name}
+        <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
+          <path d="M1 7h13M8 1l6 6-6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </div>
     </Link>
   );
@@ -131,6 +144,7 @@ const INTRO_DURATION = 2200;
 
 export default function Hero() {
   const [intro, setIntro] = useState(true);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const wrapRef     = useRef<HTMLDivElement>(null);
   const canvasRef   = useRef<HTMLDivElement>(null);
@@ -159,8 +173,8 @@ export default function Hero() {
   const imgRefs  = useRef<(HTMLImageElement | null)[]>([]);
   const rafId    = useRef<number | null>(null);
 
-  const CANVAS_W = 4450;
-  const CANVAS_H = 2870;
+  const CANVAS_W = 2400;
+  const CANVAS_H = 1500;
   const halfW = CANVAS_W / 2;
   const halfH = CANVAS_H / 2;
 
@@ -256,16 +270,18 @@ export default function Hero() {
   }, []);
 
   const onCardEnter = useCallback((i: number) => {
+    setHoveredIdx(i);
     const card = cardRefs.current[i];
     const img  = imgRefs.current[i];
-    if (card) { card.style.transform = "scale(1.025)"; card.style.zIndex = "10"; }
-    if (img) img.style.transform = "scale(1.08) translateY(-4px)";
+    if (card) { card.style.transform = "scale(1.025)"; }
+    if (img) img.style.transform = "scale(1.06) translateY(-3px)";
   }, []);
 
   const onCardLeave = useCallback((i: number) => {
+    setHoveredIdx(null);
     const card = cardRefs.current[i];
     const img  = imgRefs.current[i];
-    if (card) { card.style.transform = "scale(1)"; card.style.zIndex = "2"; }
+    if (card) { card.style.transform = "scale(1)"; }
     if (img) img.style.transform = "scale(1) translateY(0)";
   }, []);
 
@@ -370,7 +386,7 @@ export default function Hero() {
             willChange:     "transform",
             display:        "flex",
             flexDirection:  "column",
-            gap:            200,
+            gap:            80,
             justifyContent: "center",
           }}
         >
@@ -380,8 +396,8 @@ export default function Hero() {
               display: "grid",
               gridAutoFlow: "column",
               gridTemplateColumns: ROW1_CARDS.map(c => `${c.w}px`).join(" "),
-              gap: 300,
-              justifyContent: "space-around",
+              gap: 120,
+              justifyContent: "center",
               alignItems: "center",
             }}
           >
@@ -394,6 +410,7 @@ export default function Hero() {
                 imgRefs={imgRefs}
                 onCardEnter={onCardEnter}
                 onCardLeave={onCardLeave}
+                hoveredIdx={hoveredIdx}
               />
             ))}
           </div>
@@ -404,8 +421,8 @@ export default function Hero() {
               display: "grid",
               gridAutoFlow: "column",
               gridTemplateColumns: ROW2_CARDS.map(c => `${c.w}px`).join(" "),
-              gap: 300,
-              justifyContent: "space-around",
+              gap: 120,
+              justifyContent: "center",
               alignItems: "center",
             }}
           >
@@ -418,6 +435,7 @@ export default function Hero() {
                 imgRefs={imgRefs}
                 onCardEnter={onCardEnter}
                 onCardLeave={onCardLeave}
+                hoveredIdx={hoveredIdx}
               />
             ))}
           </div>
