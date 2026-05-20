@@ -90,6 +90,40 @@ main {
   border-radius: 999px;
 }
 
+/* Page transition overlay — fade-through-white for home, slide-up for the rest */
+.page-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.page-transition--fade {
+  background: #ffffff;
+}
+.page-transition--fade.page-transition--covering {
+  animation: pt-fade-in 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.page-transition--fade.page-transition--revealing {
+  animation: pt-fade-out 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.page-transition--slide {
+  background: var(--color-bg);
+}
+.page-transition--slide.page-transition--covering {
+  animation: pt-slide-cover 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.page-transition--slide.page-transition--revealing {
+  animation: pt-slide-reveal 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes pt-fade-in     { from { opacity: 0; }            to { opacity: 1; } }
+@keyframes pt-fade-out    { from { opacity: 1; }            to { opacity: 0; } }
+@keyframes pt-slide-cover { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes pt-slide-reveal{ from { transform: translateY(0); }    to { transform: translateY(-100%); } }
+
 /* AOS defaults */
 [data-aos] {
   pointer-events: none;
