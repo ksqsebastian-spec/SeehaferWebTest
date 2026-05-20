@@ -42,17 +42,6 @@ export default function Contact() {
 
         {/* Main content */}
         <div>
-          <h1
-            style={{
-              fontSize: 32,
-              fontWeight: 700,
-              color: "#9b926a",
-              marginBottom: 24,
-            }}
-          >
-            Kontakt
-          </h1>
-
           <p
             style={{
               fontSize: "clamp(48px, 5.5vw, 80px)",
@@ -162,33 +151,40 @@ export default function Contact() {
             paddingTop: 40,
           }}
         >
-          {/* Logo */}
+          {/* Logo — stacked wordmark: ELEMENTE big & white on top,
+              seehafer in signal red below */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 16,
+              display: "inline-flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              lineHeight: 1,
+              marginBottom: 20,
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
-              <path
-                d="M17 5.5C17 3.57 14.31 2 11 2C7.69 2 5 3.57 5 5.5C5 7.43 7.69 9 11 9C14.31 9 17 10.57 17 12.5C17 14.43 14.31 16 11 16C7.69 16 5 14.43 5 12.5"
-                stroke="#fff"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
             <span
               style={{
-                fontSize: 13,
-                letterSpacing: "0.08em",
+                fontSize: 36,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
                 textTransform: "uppercase",
                 color: "#fff",
-                fontWeight: 400,
+                lineHeight: 0.95,
               }}
             >
-              Seehafer Elemente
+              Elemente
+            </span>
+            <span
+              style={{
+                fontSize: 18,
+                fontWeight: 500,
+                letterSpacing: "0.02em",
+                color: "#e11d2c",
+                marginTop: 4,
+                lineHeight: 1,
+              }}
+            >
+              seehafer
             </span>
           </div>
 

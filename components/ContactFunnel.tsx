@@ -9,9 +9,9 @@ import { usePathname } from "next/navigation";
 const EASE = "cubic-bezier(0.85, 0.09, 0.15, 0.91)";
 const POP = "cubic-bezier(0.16, 1, 0.3, 1)";
 const TAN = "#9b926a";
-const INK = "#0c0b07";
-const GHOST = "rgba(12,11,7,0.16)";
-const MUTED = "rgba(12,11,7,0.5)";
+const INK = "#000000";
+const GHOST = "rgba(0,0,0,0.16)";
+const MUTED = "rgba(0,0,0,0.5)";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Data — every option carries its own image so the backdrop tracks the
@@ -422,14 +422,14 @@ export default function ContactFunnel() {
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   filter: isThanks
-                    ? "blur(22px) saturate(1.35)"
+                    ? "blur(16px) saturate(1.4)"
                     : revealing
-                    ? "blur(28px) saturate(1.3)"
+                    ? "blur(20px) saturate(1.35)"
                     : isPreviewHover
-                    ? "blur(34px) saturate(1.25)"
-                    : "blur(44px) saturate(1.18)",
+                    ? "blur(24px) saturate(1.3)"
+                    : "blur(32px) saturate(1.22)",
                   transform: `scale(${
-                    isThanks ? 1.04 : revealing ? 1.06 : isPreviewHover ? 1.1 : 1.14
+                    isThanks ? 1.03 : revealing ? 1.05 : isPreviewHover ? 1.08 : 1.12
                   })`,
                   opacity: isActiveImage ? 1 : 0,
                   transition: `opacity 0.9s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
@@ -447,7 +447,7 @@ export default function ContactFunnel() {
               inset: 0,
               background: stepColor,
               mixBlendMode: "soft-light",
-              opacity: isThanks ? 0 : revealing ? 0.35 : previewImage ? 0.45 : 0.6,
+              opacity: isThanks ? 0 : revealing ? 0.25 : previewImage ? 0.32 : 0.42,
               transition: `opacity 0.6s ${EASE}, background 0.8s ${EASE}`,
               pointerEvents: "none",
             }}
@@ -463,26 +463,26 @@ export default function ContactFunnel() {
               position: "absolute",
               inset: 0,
               background: isThanks
+                ? "linear-gradient(180deg, rgba(245,243,238,0.14) 0%, rgba(235,232,226,0.12) 50%, rgba(245,243,238,0.18) 100%)"
+                : revealing
+                ? "linear-gradient(180deg, rgba(245,243,238,0.14) 0%, rgba(235,232,226,0.12) 50%, rgba(245,243,238,0.18) 100%)"
+                : previewImage
                 ? "linear-gradient(180deg, rgba(245,243,238,0.2) 0%, rgba(235,232,226,0.18) 50%, rgba(245,243,238,0.24) 100%)"
-                : revealing
-                ? "linear-gradient(180deg, rgba(245,243,238,0.22) 0%, rgba(235,232,226,0.18) 50%, rgba(245,243,238,0.26) 100%)"
-                : previewImage
-                ? "linear-gradient(180deg, rgba(245,243,238,0.3) 0%, rgba(235,232,226,0.26) 50%, rgba(245,243,238,0.34) 100%)"
-                : "linear-gradient(180deg, rgba(245,243,238,0.38) 0%, rgba(235,232,226,0.34) 50%, rgba(245,243,238,0.42) 100%)",
+                : "linear-gradient(180deg, rgba(245,243,238,0.28) 0%, rgba(235,232,226,0.25) 50%, rgba(245,243,238,0.32) 100%)",
               backdropFilter: isThanks
-                ? "blur(2px) saturate(1.05)"
+                ? "blur(2px) saturate(1.1)"
                 : revealing
-                ? "blur(3px) saturate(1.05)"
+                ? "blur(2px) saturate(1.1)"
                 : previewImage
-                ? "blur(4px) saturate(1.1)"
-                : "blur(6px) saturate(1.15)",
+                ? "blur(3px) saturate(1.12)"
+                : "blur(4px) saturate(1.15)",
               WebkitBackdropFilter: isThanks
-                ? "blur(2px) saturate(1.05)"
+                ? "blur(2px) saturate(1.1)"
                 : revealing
-                ? "blur(3px) saturate(1.05)"
+                ? "blur(2px) saturate(1.1)"
                 : previewImage
-                ? "blur(4px) saturate(1.1)"
-                : "blur(6px) saturate(1.15)",
+                ? "blur(3px) saturate(1.12)"
+                : "blur(4px) saturate(1.15)",
               transition: `background 0.6s ${EASE}, backdrop-filter 0.6s ${EASE}, -webkit-backdrop-filter 0.6s ${EASE}`,
             }}
           />
@@ -1368,41 +1368,6 @@ function ThanksStep({
 
   return (
     <GlassCard key={revealKey} align="center" gap={22}>
-        {/* Check ring */}
-        <div
-          style={{
-            position: "relative",
-            width: 84,
-            height: 84,
-            borderRadius: "50%",
-            border: `1.5px solid ${TAN}`,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(255,255,255,0.35)",
-            backdropFilter: "blur(10px) saturate(1.5)",
-            WebkitBackdropFilter: "blur(10px) saturate(1.5)",
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.7), 0 8px 22px rgba(12,11,7,0.14)",
-            animation: `cfRing 0.9s ${POP} both`,
-          }}
-        >
-          <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
-            <path
-              d="M9 18.5l6 6L27 12.5"
-              stroke={INK}
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{
-                strokeDasharray: 60,
-                strokeDashoffset: 60,
-                animation: `cfCheck 0.7s ${POP} 0.4s forwards`,
-              }}
-            />
-          </svg>
-        </div>
-
         {/* Heading — fills grey → ink, no surrounding glass (we're
             already inside a glass card) */}
         <h2
