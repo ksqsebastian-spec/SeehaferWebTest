@@ -62,29 +62,30 @@ main {
   }
 }
 
-/* Custom cursor — warm-tan dot, morphs into a vertical pill on hover */
+/* Custom cursor — warm-tan dot, morphs into a vertical pill on hover.
+   Transition matches the site's primary easing (cubic-bezier(0.16, 1, 0.3, 1))
+   and is slow enough to read as a deliberate morph. */
 .cursor {
   position: fixed;
   top: 0;
   left: 0;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: var(--color-text-brand);
   border-radius: 50%;
   pointer-events: none;
   z-index: 9999;
   transform: translate(-50%, -50%);
   transition:
-    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    background 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    width 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, width, height;
 }
 
 .cursor.is-hovering {
   width: 6px;
-  height: 24px;
+  height: 28px;
   border-radius: 999px;
 }
 

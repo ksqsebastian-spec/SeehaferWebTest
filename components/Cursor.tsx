@@ -2,8 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
+// Pill state triggers over interactive elements AND text content
+// (paragraphs, headings, list items, blockquotes). Microcopy like
+// nav labels are inside <a>/<button>, so they're already covered.
 const INTERACTIVE_SELECTOR =
-  "a, button, input, textarea, select, label, summary, [role='button'], [role='link'], [data-hover]";
+  "a, button, input, textarea, select, label, summary, " +
+  "[role='button'], [role='link'], [data-hover], " +
+  "p, h1, h2, h3, h4, h5, h6, li, blockquote, dt, dd";
 
 export default function Cursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
