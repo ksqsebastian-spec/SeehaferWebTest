@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Cursor from "@/components/Cursor";
-import SmoothScroll from "@/components/SmoothScroll";
 import ProjectDetail from "@/components/ProjectDetail";
 import NextProject from "@/components/NextProject";
 import { projects, getProject, getNextProject } from "@/lib/projects";
@@ -35,7 +34,6 @@ export default async function ProjectPage(
 
   return (
     <>
-      <SmoothScroll />
       <Cursor />
       <Navbar />
       <main>

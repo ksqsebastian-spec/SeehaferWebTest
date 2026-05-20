@@ -1,5 +1,7 @@
 "use client";
 
+import Reveal from "@/components/Reveal";
+
 const services = [
   {
     title: "Naturstein",
@@ -109,19 +111,21 @@ export default function Profile() {
             zIndex: 2,
           }}
         >
-          <p
-            style={{
-              fontSize: "clamp(56px, 8vw, 128px)",
-              fontWeight: 400,
-              color: "#ffffff",
-              letterSpacing: "-0.01em",
-              lineHeight: 1.1,
-            }}
-          >
-            Handwerkliche
-            <br />
-            Methoden.
-          </p>
+          <Reveal delay={150} y={36}>
+            <p
+              style={{
+                fontSize: "clamp(56px, 8vw, 128px)",
+                fontWeight: 400,
+                color: "#ffffff",
+                letterSpacing: "-0.01em",
+                lineHeight: 1.1,
+              }}
+            >
+              Handwerkliche
+              <br />
+              Methoden.
+            </p>
+          </Reveal>
         </div>
 
         {/* Second slide title hint */}
@@ -160,79 +164,83 @@ export default function Profile() {
         }}
       >
         {/* Overview */}
-        <div style={{ marginBottom: "clamp(80px, 10vw, 160px)" }}>
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 400,
-              letterSpacing: "-0.01em",
-              marginBottom: 40,
-            }}
-          >
-            Überblick
-          </h2>
-          <p
-            style={{
-              fontSize: "clamp(28px, 3.5vw, 48px)",
-              fontWeight: 400,
-              lineHeight: 1.35,
-              letterSpacing: "-0.01em",
-              maxWidth: 900,
-            }}
-          >
-            ––– Ursprünglich aus der Tradition des deutschen Handwerks kommend,
-            hat Gründer Sebastian Seehafer sein Können an anspruchsvollen
-            Projekten perfektioniert. Mit über einem Jahrzehnt Erfahrung und
-            der Gründung von Seehafer Elemente sind wir zu einer der
-            führenden Adressen für Naturstein und Fliesenarbeiten geworden.
-          </p>
-        </div>
+        <Reveal>
+          <div style={{ marginBottom: "clamp(80px, 10vw, 160px)" }}>
+            <h2
+              style={{
+                fontSize: 20,
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+                marginBottom: 40,
+              }}
+            >
+              Überblick
+            </h2>
+            <p
+              style={{
+                fontSize: "clamp(28px, 3.5vw, 48px)",
+                fontWeight: 400,
+                lineHeight: 1.35,
+                letterSpacing: "-0.01em",
+                maxWidth: 900,
+              }}
+            >
+              ––– Ursprünglich aus der Tradition des deutschen Handwerks kommend,
+              hat Gründer Sebastian Seehafer sein Können an anspruchsvollen
+              Projekten perfektioniert. Mit über einem Jahrzehnt Erfahrung und
+              der Gründung von Seehafer Elemente sind wir zu einer der
+              führenden Adressen für Naturstein und Fliesenarbeiten geworden.
+            </p>
+          </div>
+        </Reveal>
 
         {/* Meticulous Implementation heading */}
-        <div style={{ marginBottom: "clamp(60px, 8vw, 100px)" }}>
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 400,
-              letterSpacing: "-0.01em",
-              color: "rgba(255,255,255,0.6)",
-              marginBottom: 40,
-            }}
-          >
-            Unsere Leistungen
-          </h2>
-          <p
-            style={{
-              fontSize: "clamp(56px, 8vw, 128px)",
-              fontWeight: 400,
-              letterSpacing: "-0.01em",
-              lineHeight: 1.0,
-              marginBottom: 32,
-            }}
-          >
-            Akribische
-            <br />
-            Umsetzung
-          </p>
-          <p
-            style={{
-              fontSize: "clamp(18px, 2vw, 28px)",
-              fontWeight: 400,
-              letterSpacing: "-0.01em",
-              lineHeight: 1.5,
-              maxWidth: 800,
-            }}
-          >
-            Wir arbeiten mit Ihnen, Ihrem Architekten, Designer oder Bauherrn
-            zusammen, um eine fehlerfreie Umsetzung Ihrer Vision zu
-            gewährleisten.
-          </p>
-        </div>
+        <Reveal>
+          <div style={{ marginBottom: "clamp(60px, 8vw, 100px)" }}>
+            <h2
+              style={{
+                fontSize: 20,
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+                color: "rgba(255,255,255,0.6)",
+                marginBottom: 40,
+              }}
+            >
+              Unsere Leistungen
+            </h2>
+            <p
+              style={{
+                fontSize: "clamp(56px, 8vw, 128px)",
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.0,
+                marginBottom: 32,
+              }}
+            >
+              Akribische
+              <br />
+              Umsetzung
+            </p>
+            <p
+              style={{
+                fontSize: "clamp(18px, 2vw, 28px)",
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.5,
+                maxWidth: 800,
+              }}
+            >
+              Wir arbeiten mit Ihnen, Ihrem Architekten, Designer oder Bauherrn
+              zusammen, um eine fehlerfreie Umsetzung Ihrer Vision zu
+              gewährleisten.
+            </p>
+          </div>
+        </Reveal>
 
         {/* Service items */}
         {services.map((service, i) => (
+          <Reveal key={i} y={40}>
           <div
-            key={i}
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
@@ -285,6 +293,7 @@ export default function Profile() {
               />
             </div>
           </div>
+          </Reveal>
         ))}
       </section>
 
@@ -295,21 +304,23 @@ export default function Profile() {
           padding: "clamp(80px, 10vw, 160px) clamp(24px, 5vw, 72px)",
         }}
       >
-        <h2
-          style={{
-            fontSize: "clamp(56px, 8vw, 128px)",
-            fontWeight: 400,
-            letterSpacing: "-0.01em",
-            lineHeight: 1.05,
-            color: "#35311f",
-            marginBottom: "clamp(60px, 8vw, 120px)",
-          }}
-        >
-          Vertraut von den
-          <br />
-          besten Architekten
-          <br />& Bauherren
-        </h2>
+        <Reveal>
+          <h2
+            style={{
+              fontSize: "clamp(56px, 8vw, 128px)",
+              fontWeight: 400,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.05,
+              color: "#35311f",
+              marginBottom: "clamp(60px, 8vw, 120px)",
+            }}
+          >
+            Vertraut von den
+            <br />
+            besten Architekten
+            <br />& Bauherren
+          </h2>
+        </Reveal>
 
         {/* Client logo grid */}
         <div
@@ -368,8 +379,8 @@ export default function Profile() {
         </h2>
 
         {testimonials.map((t, i) => (
+          <Reveal key={i} y={40}>
           <div
-            key={i}
             style={{
               marginBottom: "clamp(60px, 8vw, 100px)",
             }}
@@ -444,6 +455,7 @@ export default function Profile() {
               </div>
             </div>
           </div>
+          </Reveal>
         ))}
       </section>
 
@@ -467,6 +479,7 @@ export default function Profile() {
           Ausgewähltes Projekt
         </h2>
 
+        <Reveal y={40}>
         <div
           style={{
             display: "flex",
@@ -523,6 +536,7 @@ export default function Profile() {
             Bad
           </span>
         </div>
+        </Reveal>
 
         <div style={{ marginTop: 40 }}>
           <a

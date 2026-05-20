@@ -97,36 +97,29 @@ export default function Navbar() {
 
         {/* Links */}
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          {/* Projects dropdown trigger */}
-          <div ref={dropdownRef} style={{ position: "relative" }}>
-            <button
-              onClick={() => setDropdownOpen((v) => !v)}
+          {/* Projects link + dropdown */}
+          <div
+            ref={dropdownRef}
+            style={{ position: "relative" }}
+            onMouseEnter={() => setDropdownOpen(true)}
+            onMouseLeave={() => setDropdownOpen(false)}
+          >
+            <Link
+              href="/projekte"
               style={{
                 color: isProjectsActive || dropdownOpen ? "#fff" : "rgba(255,255,255,0.75)",
                 background: isProjectsActive || dropdownOpen ? "rgba(255,255,255,0.08)" : "transparent",
-                border: "none",
-                cursor: "none",
+                textDecoration: "none",
                 fontSize: "0.8125rem",
                 fontWeight: 400,
                 letterSpacing: "0.06em",
                 textTransform: "uppercase",
                 padding: "6px 14px",
                 borderRadius: 100,
-                fontFamily: "inherit",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: 5,
                 transition: "color 0.2s ease, background 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#fff";
-                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)";
-              }}
-              onMouseLeave={(e) => {
-                if (!isProjectsActive && !dropdownOpen) {
-                  (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)";
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
-                }
               }}
             >
               Projekte
@@ -142,7 +135,7 @@ export default function Navbar() {
               >
                 <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </button>
+            </Link>
 
             {/* Dropdown panel */}
             <div
