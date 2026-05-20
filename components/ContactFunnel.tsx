@@ -13,55 +13,60 @@ const GHOST = "rgba(12,11,7,0.16)";
 const MUTED = "rgba(12,11,7,0.5)";
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Data
+   Data — every option carries its own image so the backdrop tracks the
+   user's selections.
    ────────────────────────────────────────────────────────────────────────── */
-type Pill = { id: string; label: string };
+type Pill = { id: string; label: string; image: string };
 
 const PROJECT_KINDS: Pill[] = [
-  { id: "bad",      label: "Badezimmer" },
-  { id: "kueche",   label: "Küche" },
-  { id: "terrasse", label: "Terrasse" },
-  { id: "stein",    label: "Naturstein" },
+  { id: "bad",      label: "Badezimmer", image: "/images/proj-01.jpg" },
+  { id: "kueche",   label: "Küche",      image: "/images/proj-05.jpg" },
+  { id: "terrasse", label: "Terrasse",   image: "/images/proj-02.jpg" },
+  { id: "stein",    label: "Naturstein", image: "/images/proj-07.jpg" },
 ];
 
 const TIMELINES: Pill[] = [
-  { id: "now",   label: "Sobald möglich" },
-  { id: "3m",    label: "In drei Monaten" },
-  { id: "6m",    label: "Im Halbjahr" },
-  { id: "later", label: "Noch unverbindlich" },
+  { id: "now",   label: "Sobald möglich",      image: "/images/proj-03.jpg" },
+  { id: "3m",    label: "In drei Monaten",     image: "/images/proj-08.jpg" },
+  { id: "6m",    label: "Im Halbjahr",         image: "/images/proj-06.jpg" },
+  { id: "later", label: "Noch unverbindlich",  image: "/images/proj-09.jpg" },
 ];
 
 const BUDGETS: Pill[] = [
-  { id: "s",  label: "Bis 10.000 €" },
-  { id: "m",  label: "10 – 25.000 €" },
-  { id: "l",  label: "25 – 50.000 €" },
-  { id: "xl", label: "Über 50.000 €" },
+  { id: "s",  label: "Bis 10.000 €",   image: "/images/proj-04.jpg" },
+  { id: "m",  label: "10 – 25.000 €",  image: "/images/proj-02.jpg" },
+  { id: "l",  label: "25 – 50.000 €",  image: "/images/proj-09.jpg" },
+  { id: "xl", label: "Über 50.000 €",  image: "/images/proj-01.jpg" },
 ];
 
-/* Backdrop image rotates per step — each blurred to abstraction so it reads
-   as atmosphere, not a portfolio shot. */
-const STEP_BGS = [
-  "/images/proj-04.jpg", // pool — blue/serene
-  "/images/proj-02.jpg", // terrace — warm stone
-  "/images/proj-06.jpg", // wohnen — wood
-  "/images/proj-01.jpg", // bath — tile
-  "/images/proj-07.jpg", // stone — golden
-];
+const DEFAULT_BG = "/images/proj-04.jpg";
+
+/* Pool of all images we may show — used so we can preload + render them
+   all stacked, only the active one opaque. */
+const ALL_IMAGES = Array.from(
+  new Set([
+    DEFAULT_BG,
+    ...PROJECT_KINDS.map((p) => p.image),
+    ...TIMELINES.map((t) => t.image),
+    ...BUDGETS.map((b) => b.image),
+  ])
+);
 
 /* Anchor + alignment per step. Numbers are percentages of the viewport. */
 type Anchor = { x: number; y: number; align: "left" | "right" | "center"; vAlign: "top" | "center" | "bottom" };
 const STEP_ANCHORS: Anchor[] = [
-  { x: 12, y: 50, align: "left",   vAlign: "center" }, // 0 project
-  { x: 88, y: 56, align: "right",  vAlign: "center" }, // 1 timeline — offset right + down
-  { x: 16, y: 64, align: "left",   vAlign: "bottom" }, // 2 budget — offset left + lower
-  { x: 50, y: 50, align: "center", vAlign: "center" }, // 3 contact — centered
+  { x: 10, y: 50, align: "left",   vAlign: "center" }, // 0 project
+  { x: 90, y: 56, align: "right",  vAlign: "center" }, // 1 timeline
+  { x: 14, y: 62, align: "left",   vAlign: "bottom" }, // 2 budget
+  { x: 50, y: 50, align: "center", vAlign: "center" }, // 3 contact
   { x: 50, y: 50, align: "center", vAlign: "center" }, // 4 thanks
 ];
 
 const TOTAL_STEPS = 5;
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Fill-reveal text: each character fades from ghost-grey to ink, in order.
+   Fill-reveal text: each character fades from ghost-grey to ink, in
+   order. Wraps by word (not character) so long phrases break cleanly.
    ────────────────────────────────────────────────────────────────────────── */
 function FillReveal({
   text,
@@ -74,23 +79,55 @@ function FillReveal({
   charMs?: number;
   duration?: number;
 }) {
+  const words = text.split(" ");
+  let i = 0;
   return (
-    <span style={{ display: "inline" }}>
-      {text.split("").map((ch, i) => (
-        <span
-          key={i}
-          style={{
-            display: "inline-block",
-            color: GHOST,
-            animation: `cfFill ${duration}s linear both`,
-            animationDelay: `${delay + (i * charMs) / 1000}s`,
-            whiteSpace: "pre",
-          }}
-        >
-          {ch}
-        </span>
-      ))}
-    </span>
+    <>
+      {words.map((word, wi) => {
+        const chars = Array.from(word);
+        const wordNode = (
+          <span
+            key={`w-${wi}`}
+            style={{ display: "inline-block", whiteSpace: "nowrap" }}
+          >
+            {chars.map((ch, ci) => {
+              const idx = i++;
+              return (
+                <span
+                  key={ci}
+                  style={{
+                    display: "inline-block",
+                    color: GHOST,
+                    animation: `cfFill ${duration}s linear both`,
+                    animationDelay: `${delay + (idx * charMs) / 1000}s`,
+                  }}
+                >
+                  {ch}
+                </span>
+              );
+            })}
+          </span>
+        );
+        if (wi < words.length - 1) {
+          const spaceIdx = i++;
+          return (
+            <span key={wi}>
+              {wordNode}
+              <span
+                style={{
+                  color: GHOST,
+                  animation: `cfFill ${duration}s linear both`,
+                  animationDelay: `${delay + (spaceIdx * charMs) / 1000}s`,
+                }}
+              >
+                {" "}
+              </span>
+            </span>
+          );
+        }
+        return <span key={wi}>{wordNode}</span>;
+      })}
+    </>
   );
 }
 
@@ -113,6 +150,29 @@ export default function ContactFunnel() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+
+  /* Live previews — hovering an option fades that option's image in
+     under the milky wash. The "revealing" state briefly lifts the
+     milky wash when you actually commit, so the image reads through
+     and "ports" you to the next step. */
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [revealing, setRevealing] = useState(false);
+
+  /* Resolve the active backdrop image based on the user's choices */
+  const activeImage = (() => {
+    if (previewImage) return previewImage;
+    if (step >= 4) return BUDGETS.find((b) => b.id === budget)?.image || DEFAULT_BG;
+    if (step >= 3) return BUDGETS.find((b) => b.id === budget)?.image
+        || TIMELINES.find((t) => t.id === timeline)?.image
+        || PROJECT_KINDS.find((p) => p.id === project)?.image
+        || DEFAULT_BG;
+    if (step >= 2) return TIMELINES.find((t) => t.id === timeline)?.image
+        || PROJECT_KINDS.find((p) => p.id === project)?.image
+        || DEFAULT_BG;
+    if (step >= 1) return PROJECT_KINDS.find((p) => p.id === project)?.image
+        || DEFAULT_BG;
+    return DEFAULT_BG;
+  })();
 
   /* CTA reveal after hero intro */
   useEffect(() => {
@@ -176,11 +236,22 @@ export default function ContactFunnel() {
   const choose = (
     setter: (v: string) => void,
     value: string,
-    advanceFrom: number
+    advanceFrom: number,
+    image: string
   ) => {
     setter(value);
     if (step === advanceFrom) {
-      setTimeout(() => goNext(), 520);
+      // Pin the preview to the selected image so the bg doesn't snap
+      // back if the user's cursor leaves the pill mid-transition.
+      setPreviewImage(image);
+      setRevealing(true);
+      setTimeout(() => {
+        goNext();
+      }, 720);
+      setTimeout(() => {
+        setRevealing(false);
+        setPreviewImage(null);
+      }, 1400);
     }
   };
 
@@ -305,10 +376,9 @@ export default function ContactFunnel() {
             transition: `opacity 0.6s ${EASE}`,
           }}
         >
-          {/* Blurred scenic backdrops — one per step, crossfading. Heavy
-              blur reduces them to soft color/luminance hints behind the
-              milky wash. */}
-          {STEP_BGS.map((src, i) => (
+          {/* Pre-mount every image we may show, only the active one
+              opaque. Heavy blur — they read as soft color hints. */}
+          {ALL_IMAGES.map((src) => (
             <div
               key={src}
               aria-hidden
@@ -318,24 +388,32 @@ export default function ContactFunnel() {
                 backgroundImage: `url(${src})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                filter: "blur(64px) saturate(1.15)",
-                transform: `scale(1.2) translateY(${(step - i) * -10}px)`,
-                opacity: step === i ? 1 : 0,
-                transition: `opacity 1.1s ${EASE}, transform 1.4s ${EASE}`,
+                filter: revealing
+                  ? "blur(34px) saturate(1.3)"
+                  : "blur(58px) saturate(1.15)",
+                transform: `scale(${revealing ? 1.06 : 1.18})`,
+                opacity: activeImage === src ? 1 : 0,
+                transition: `opacity 1s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
               }}
             />
           ))}
-          {/* Milky wash — opaque enough to feel like frosted/opal glass while
-              still passing through the scenery's warm/cool color cast. */}
+          {/* Milky wash — lifts a bit during a "reveal moment" so the
+              image briefly comes through, then settles back. */}
           <div
             aria-hidden
             style={{
               position: "absolute",
               inset: 0,
-              background:
-                "linear-gradient(180deg, rgba(245,243,238,0.78) 0%, rgba(235,232,226,0.72) 50%, rgba(245,243,238,0.82) 100%)",
-              backdropFilter: "blur(8px) saturate(1.1)",
-              WebkitBackdropFilter: "blur(8px) saturate(1.1)",
+              background: revealing
+                ? "linear-gradient(180deg, rgba(245,243,238,0.38) 0%, rgba(235,232,226,0.32) 50%, rgba(245,243,238,0.42) 100%)"
+                : "linear-gradient(180deg, rgba(245,243,238,0.78) 0%, rgba(235,232,226,0.72) 50%, rgba(245,243,238,0.82) 100%)",
+              backdropFilter: revealing
+                ? "blur(4px) saturate(1.05)"
+                : "blur(8px) saturate(1.1)",
+              WebkitBackdropFilter: revealing
+                ? "blur(4px) saturate(1.05)"
+                : "blur(8px) saturate(1.1)",
+              transition: `background 0.6s ${EASE}, backdrop-filter 0.6s ${EASE}, -webkit-backdrop-filter 0.6s ${EASE}`,
             }}
           />
           {/* Very faint grain to break up flatness */}
@@ -345,9 +423,10 @@ export default function ContactFunnel() {
               position: "absolute",
               inset: 0,
               backgroundImage: "url(/tile-bg.svg)",
-              opacity: 0.18,
+              opacity: revealing ? 0.08 : 0.16,
               mixBlendMode: "multiply",
               pointerEvents: "none",
+              transition: `opacity 0.6s ${EASE}`,
             }}
           />
 
@@ -393,82 +472,37 @@ export default function ContactFunnel() {
             </svg>
           </button>
 
-          {/* Step counter — bottom-left, minimal */}
-          <div
-            style={{
-              position: "absolute",
-              left: 36,
-              bottom: 32,
-              zIndex: 5,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 12,
-              fontSize: 10,
-              letterSpacing: "0.28em",
-              textTransform: "uppercase",
-              color: MUTED,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            <span style={{ color: INK, fontWeight: 400 }}>
-              {String(Math.min(step + 1, TOTAL_STEPS - 1)).padStart(2, "0")}
-            </span>
-            <span
-              aria-hidden
-              style={{
-                width: 80,
-                height: 1,
-                background: "rgba(12,11,7,0.18)",
-                position: "relative",
-                overflow: "hidden",
-                display: "inline-block",
-              }}
-            >
-              <span
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: INK,
-                  transformOrigin: "left",
-                  transform: `scaleX(${Math.min(
-                    (step + 1) / (TOTAL_STEPS - 1),
-                    1
-                  )})`,
-                  transition: `transform 0.8s ${EASE}`,
-                }}
-              />
-            </span>
-            <span>{String(TOTAL_STEPS - 1).padStart(2, "0")}</span>
-          </div>
-
-          {/* Back (subtle, only after step 0 and before thanks) */}
+          {/* Back — just a serif italic arrow, sitting bottom-left */}
           {step > 0 && step < TOTAL_STEPS - 1 && (
             <button
               type="button"
               onClick={goBack}
+              aria-label="Zurück"
               style={{
                 position: "absolute",
-                right: 36,
+                left: 40,
                 bottom: 32,
                 zIndex: 5,
+                width: 56,
+                height: 56,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
-                padding: "6px 4px",
+                justifyContent: "center",
                 border: "none",
                 background: "transparent",
                 color: MUTED,
-                fontFamily: "inherit",
-                fontSize: 10,
-                letterSpacing: "0.24em",
-                textTransform: "uppercase",
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontStyle: "italic",
+                fontSize: 38,
+                lineHeight: 1,
                 cursor: "pointer",
-                transition: "color 0.25s ease, transform 0.3s ease",
+                padding: 0,
+                transition: "color 0.25s ease, transform 0.4s ease",
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.color = INK;
                 (e.currentTarget as HTMLElement).style.transform =
-                  "translateX(-3px)";
+                  "translateX(-4px)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.color = MUTED;
@@ -476,16 +510,7 @@ export default function ContactFunnel() {
                   "translateX(0)";
               }}
             >
-              <svg width="14" height="10" viewBox="0 0 16 12" fill="none">
-                <path
-                  d="M15 6H2M7 1L2 6l5 5"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Zurück
+              ←
             </button>
           )}
 
@@ -504,16 +529,18 @@ export default function ContactFunnel() {
                   <ProjectStep
                     revealKey={revealKeys[0]}
                     selected={project}
-                    onSelect={(id) => choose(setProject, id, 0)}
+                    onSelect={(id, image) => choose(setProject, id, 0, image)}
+                    onHover={setPreviewImage}
                   />
                 )}
                 {i === 1 && (
                   <PillStep
                     revealKey={revealKeys[1]}
-                    title="Wann darf gestartet werden?"
+                    title="Wann darf es losgehen?"
                     options={TIMELINES}
                     selected={timeline}
-                    onSelect={(id) => choose(setTimeline, id, 1)}
+                    onSelect={(id, image) => choose(setTimeline, id, 1, image)}
+                    onHover={setPreviewImage}
                     align="right"
                   />
                 )}
@@ -523,7 +550,8 @@ export default function ContactFunnel() {
                     title="In welchem Rahmen?"
                     options={BUDGETS}
                     selected={budget}
-                    onSelect={(id) => choose(setBudget, id, 2)}
+                    onSelect={(id, image) => choose(setBudget, id, 2, image)}
+                    onHover={setPreviewImage}
                     align="left"
                   />
                 )}
@@ -595,8 +623,7 @@ function StepStage({
         opacity: isActive ? 1 : 0,
         pointerEvents: isActive ? "auto" : "none",
         transition: `opacity 0.55s ${EASE}, transform 0.7s ${EASE}`,
-        maxWidth: "min(92vw, 540px)",
-        width: anchor.align === "center" ? "min(92vw, 540px)" : "auto",
+        width: anchor.align === "center" ? "min(92vw, 560px)" : "min(86vw, 480px)",
       }}
     >
       {children}
@@ -605,16 +632,18 @@ function StepStage({
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Step 0 — project kind
+   Step 0 — project kind, with image-circle pills
    ────────────────────────────────────────────────────────────────────────── */
 function ProjectStep({
   revealKey,
   selected,
   onSelect,
+  onHover,
 }: {
   revealKey: number;
   selected: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, image: string) => void;
+  onHover: (image: string | null) => void;
 }) {
   return (
     <div key={revealKey} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
@@ -623,15 +652,17 @@ function ProjectStep({
         options={PROJECT_KINDS}
         selected={selected}
         onSelect={onSelect}
+        onHover={onHover}
         align="left"
         startDelay={0.45}
+        variant="image"
       />
     </div>
   );
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Steps 1 & 2 — pills (compact text rows, optionally right-aligned)
+   Steps 1 & 2 — pills (compact glass pills, alignment varies)
    ────────────────────────────────────────────────────────────────────────── */
 function PillStep({
   revealKey,
@@ -639,13 +670,15 @@ function PillStep({
   options,
   selected,
   onSelect,
+  onHover,
   align,
 }: {
   revealKey: number;
   title: string;
   options: Pill[];
   selected: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, image: string) => void;
+  onHover: (image: string | null) => void;
   align: "left" | "right";
 }) {
   return (
@@ -664,8 +697,10 @@ function PillStep({
         options={options}
         selected={selected}
         onSelect={onSelect}
+        onHover={onHover}
         align={align}
         startDelay={0.4}
+        variant="plain"
       />
     </div>
   );
@@ -684,13 +719,16 @@ function Question({
   return (
     <h2
       style={{
-        fontSize: "clamp(38px, 4.8vw, 60px)",
+        fontSize: "clamp(34px, 4.4vw, 56px)",
         fontWeight: 300,
         letterSpacing: "-0.035em",
-        lineHeight: 1.02,
+        lineHeight: 1.04,
         margin: 0,
         textAlign: align,
-        color: GHOST, // serves as background so spaces and partial reveals look consistent
+        color: GHOST,
+        maxWidth: "min(90vw, 560px)",
+        wordSpacing: "0.01em",
+        hyphens: "manual",
       }}
     >
       <FillReveal text={text} delay={0.05} charMs={28} duration={0.5} />
@@ -705,14 +743,18 @@ function OptionList({
   options,
   selected,
   onSelect,
+  onHover,
   align,
   startDelay,
+  variant,
 }: {
   options: Pill[];
   selected: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, image: string) => void;
+  onHover: (image: string | null) => void;
   align: "left" | "right";
   startDelay: number;
+  variant: "image" | "plain";
 }) {
   return (
     <ul
@@ -722,9 +764,10 @@ function OptionList({
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: variant === "image" ? 14 : 10,
         alignItems: align === "right" ? "flex-end" : "flex-start",
       }}
+      onMouseLeave={() => onHover(null)}
     >
       {options.map((o, i) => {
         const isSelected = selected === o.id;
@@ -735,14 +778,19 @@ function OptionList({
             style={{
               animation: `cfRise 0.6s ${EASE} both`,
               animationDelay: `${startDelay + i * 0.07}s`,
+              maxWidth: "min(86vw, 420px)",
             }}
           >
             <OptionPill
               label={o.label}
+              image={o.image}
               isSelected={isSelected}
               isDimmed={isDimmed}
               fillDelay={startDelay + i * 0.07 + 0.08}
-              onClick={() => onSelect(o.id)}
+              variant={variant}
+              align={align}
+              onClick={() => onSelect(o.id, o.image)}
+              onHover={onHover}
             />
           </li>
         );
@@ -751,74 +799,135 @@ function OptionList({
   );
 }
 
-/* Glass pill — frosted translucent surface over the milky backdrop */
+/* Glass pill — frosted translucent surface over the milky backdrop.
+   In "image" variant, a circular thumbnail of the option's image sits
+   on the leading edge, expanding subtly on hover. */
 function OptionPill({
   label,
+  image,
   isSelected,
   isDimmed,
   fillDelay,
+  variant,
+  align,
   onClick,
+  onHover,
 }: {
   label: string;
+  image: string;
   isSelected: boolean;
   isDimmed: boolean;
   fillDelay: number;
+  variant: "image" | "plain";
+  align: "left" | "right";
   onClick: () => void;
+  onHover: (image: string | null) => void;
 }) {
   const [hover, setHover] = useState(false);
 
   const surfaceBase = "rgba(255,255,255,0.32)";
-  const surfaceHover = "rgba(255,255,255,0.5)";
+  const surfaceHover = "rgba(255,255,255,0.55)";
   const surfaceSelected = "rgba(155,146,106,0.22)";
   const borderBase = "rgba(255,255,255,0.55)";
-  const borderHover = "rgba(255,255,255,0.75)";
+  const borderHover = "rgba(255,255,255,0.85)";
   const borderSelected = "rgba(155,146,106,0.55)";
 
   const bg = isSelected ? surfaceSelected : hover ? surfaceHover : surfaceBase;
   const border = isSelected ? borderSelected : hover ? borderHover : borderBase;
 
+  const handleEnter = () => {
+    setHover(true);
+    onHover(image);
+  };
+  const handleLeave = () => {
+    setHover(false);
+  };
+
+  const isImage = variant === "image";
+
   return (
     <button
       type="button"
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
       style={{
         position: "relative",
         display: "inline-flex",
         alignItems: "center",
-        gap: 14,
-        padding: "14px 26px 14px 30px",
+        flexDirection: align === "right" ? "row-reverse" : "row",
+        gap: isImage ? 16 : 14,
+        padding: isImage ? "10px 26px 10px 12px" : "14px 26px 14px 28px",
         borderRadius: 999,
         border: `1px solid ${border}`,
         background: bg,
         color: INK,
         fontFamily: "inherit",
-        fontSize: "clamp(17px, 1.6vw, 21px)",
+        fontSize: isImage
+          ? "clamp(18px, 1.65vw, 22px)"
+          : "clamp(17px, 1.6vw, 21px)",
         fontWeight: 300,
         letterSpacing: "-0.02em",
         lineHeight: 1,
         cursor: "pointer",
         backdropFilter: "blur(22px) saturate(1.6)",
         WebkitBackdropFilter: "blur(22px) saturate(1.6)",
-        boxShadow:
-          "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(12,11,7,0.05), 0 10px 28px rgba(12,11,7,0.08)",
+        boxShadow: hover
+          ? "inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(12,11,7,0.05), 0 18px 38px rgba(12,11,7,0.14)"
+          : "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(12,11,7,0.05), 0 10px 28px rgba(12,11,7,0.08)",
         opacity: isDimmed ? 0.4 : 1,
-        transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, opacity 0.4s ${EASE}, transform 0.45s ${POP}, box-shadow 0.4s ${EASE}`,
-        transform: `translateY(${isSelected ? -2 : hover ? -1 : 0}px)`,
+        transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, opacity 0.4s ${EASE}, transform 0.5s ${POP}, box-shadow 0.5s ${EASE}`,
+        transform: `translateY(${isSelected ? -3 : hover ? -2 : 0}px) translateX(${
+          hover && align === "left" ? 4 : hover && align === "right" ? -4 : 0
+        }px)`,
       }}
     >
-      <span style={{ display: "inline-block" }}>
+      {isImage && (
+        <span
+          aria-hidden
+          style={{
+            position: "relative",
+            display: "inline-block",
+            width: hover || isSelected ? 50 : 44,
+            height: hover || isSelected ? 50 : 44,
+            borderRadius: "50%",
+            overflow: "hidden",
+            flexShrink: 0,
+            boxShadow: isSelected
+              ? `inset 0 0 0 1.5px ${TAN}, 0 6px 14px rgba(12,11,7,0.18)`
+              : "0 6px 14px rgba(12,11,7,0.16)",
+            transition: `width 0.5s ${POP}, height 0.5s ${POP}, box-shadow 0.4s ${EASE}`,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image}
+            alt=""
+            draggable="false"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              transform: `scale(${hover ? 1.15 : 1})`,
+              transition: `transform 0.7s ${EASE}`,
+            }}
+          />
+        </span>
+      )}
+
+      <span style={{ display: "inline-block", flex: 1 }}>
         <FillReveal text={label} delay={fillDelay} charMs={22} duration={0.45} />
       </span>
+
       <span
         aria-hidden
         style={{
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          width: 18,
-          height: 18,
+          width: 20,
+          height: 20,
           borderRadius: "50%",
           background: isSelected ? TAN : "transparent",
           border: isSelected
@@ -827,7 +936,8 @@ function OptionPill({
           color: isSelected ? "#fff" : INK,
           opacity: hover || isSelected ? 1 : 0.55,
           transition: `background 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.4s ${POP}`,
-          transform: `scale(${hover && !isSelected ? 1.08 : 1})`,
+          transform: `scale(${hover && !isSelected ? 1.1 : 1})`,
+          flexShrink: 0,
         }}
       >
         {isSelected ? (
