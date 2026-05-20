@@ -152,12 +152,12 @@ export default function Contact() {
           }}
         >
           {/* Logo — stacked wordmark: ELEMENTE big & white on top,
-              seehafer in signal red below */}
+              seehafer in signal red centered below */}
           <div
             style={{
               display: "inline-flex",
               flexDirection: "column",
-              alignItems: "flex-start",
+              alignItems: "center",
               lineHeight: 1,
               marginBottom: 20,
             }}
@@ -176,11 +176,11 @@ export default function Contact() {
             </span>
             <span
               style={{
-                fontSize: 18,
+                fontSize: 22,
                 fontWeight: 500,
                 letterSpacing: "0.02em",
                 color: "#e11d2c",
-                marginTop: 4,
+                marginTop: 5,
                 lineHeight: 1,
               }}
             >

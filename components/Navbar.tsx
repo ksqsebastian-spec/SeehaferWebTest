@@ -87,7 +87,7 @@ export default function Navbar() {
           style={{
             display: "inline-flex",
             flexDirection: "column",
-            alignItems: "flex-start",
+            alignItems: "center",
             justifyContent: "center",
             lineHeight: 1,
             marginRight: 28,
@@ -108,9 +108,9 @@ export default function Navbar() {
           </span>
           <span
             style={{
-              fontSize: 8.5,
+              fontSize: 11,
               fontWeight: 500,
-              letterSpacing: "0.04em",
+              letterSpacing: "0.03em",
               color: "#e11d2c",
               marginTop: 2,
               lineHeight: 1,
