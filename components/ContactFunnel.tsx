@@ -382,8 +382,9 @@ export default function ContactFunnel() {
           />
 
           {/* Image layers — only become visible while previewing an
-              option or committing one. Heavy blur so they read as
-              atmospheric, not photographic. */}
+              option, while committing one, or while sitting on the
+              thanks step (where the user's chosen project image is
+              the celebratory backdrop and we want it clearly seen). */}
           {ALL_IMAGES.map((src) => (
             <div
               key={src}
@@ -394,10 +395,12 @@ export default function ContactFunnel() {
                 backgroundImage: `url(${src})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                filter: revealing
+                filter: isThanks
+                  ? "blur(22px) saturate(1.35)"
+                  : revealing
                   ? "blur(30px) saturate(1.3)"
                   : "blur(52px) saturate(1.2)",
-                transform: `scale(${revealing ? 1.06 : 1.16})`,
+                transform: `scale(${isThanks ? 1.04 : revealing ? 1.06 : 1.16})`,
                 opacity: effectivePreview === src ? 1 : 0,
                 transition: `opacity 0.9s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
               }}
@@ -406,23 +409,31 @@ export default function ContactFunnel() {
 
           {/* Milky wash — full enough to keep things soft, but thinner
               than before so the color reads more. Thins further on
-              hover so the image comes through clearly. */}
+              hover so the image comes through clearly. On the thanks
+              step we lift it so the chosen project image is clearly
+              visible behind the glass card. */}
           <div
             aria-hidden
             style={{
               position: "absolute",
               inset: 0,
-              background: revealing
+              background: isThanks
+                ? "linear-gradient(180deg, rgba(245,243,238,0.22) 0%, rgba(235,232,226,0.18) 50%, rgba(245,243,238,0.26) 100%)"
+                : revealing
                 ? "linear-gradient(180deg, rgba(245,243,238,0.24) 0%, rgba(235,232,226,0.2) 50%, rgba(245,243,238,0.28) 100%)"
                 : effectivePreview
                 ? "linear-gradient(180deg, rgba(245,243,238,0.32) 0%, rgba(235,232,226,0.28) 50%, rgba(245,243,238,0.36) 100%)"
                 : "linear-gradient(180deg, rgba(245,243,238,0.4) 0%, rgba(235,232,226,0.36) 50%, rgba(245,243,238,0.44) 100%)",
-              backdropFilter: revealing
+              backdropFilter: isThanks
+                ? "blur(2px) saturate(1.05)"
+                : revealing
                 ? "blur(3px) saturate(1.05)"
                 : effectivePreview
                 ? "blur(4px) saturate(1.1)"
                 : "blur(7px) saturate(1.15)",
-              WebkitBackdropFilter: revealing
+              WebkitBackdropFilter: isThanks
+                ? "blur(2px) saturate(1.05)"
+                : revealing
                 ? "blur(3px) saturate(1.05)"
                 : effectivePreview
                 ? "blur(4px) saturate(1.1)"
@@ -722,42 +733,50 @@ function PillStep({
 function Question({
   text,
   align = "left",
+  bare = false,
 }: {
   text: string;
   align?: "left" | "right" | "center";
+  bare?: boolean;
 }) {
+  const heading = (
+    <h2
+      style={{
+        fontSize: "clamp(34px, 4.4vw, 56px)",
+        fontWeight: 300,
+        letterSpacing: "-0.035em",
+        lineHeight: 1.04,
+        margin: 0,
+        textAlign: align,
+        color: GHOST,
+        wordSpacing: "0.01em",
+        hyphens: "manual",
+      }}
+    >
+      <FillReveal text={text} delay={0.05} charMs={28} duration={0.5} />
+    </h2>
+  );
+
+  if (bare) return heading;
+
   return (
     <div
       style={{
         display: "inline-block",
         padding: "18px 30px 22px",
         borderRadius: 28,
-        background: "rgba(255,255,255,0.28)",
-        border: "1px solid rgba(255,255,255,0.55)",
-        backdropFilter: "blur(22px) saturate(1.6)",
-        WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+        background: "rgba(255,255,255,0.36)",
+        border: "1px solid rgba(255,255,255,0.78)",
+        backdropFilter: "blur(24px) saturate(1.7)",
+        WebkitBackdropFilter: "blur(24px) saturate(1.7)",
         boxShadow:
-          "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(12,11,7,0.04), 0 14px 32px rgba(12,11,7,0.1)",
+          "inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(12,11,7,0.05), 0 16px 36px rgba(12,11,7,0.12)",
         maxWidth: "min(92vw, 560px)",
         alignSelf:
           align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start",
       }}
     >
-      <h2
-        style={{
-          fontSize: "clamp(34px, 4.4vw, 56px)",
-          fontWeight: 300,
-          letterSpacing: "-0.035em",
-          lineHeight: 1.04,
-          margin: 0,
-          textAlign: align,
-          color: GHOST,
-          wordSpacing: "0.01em",
-          hyphens: "manual",
-        }}
-      >
-        <FillReveal text={text} delay={0.05} charMs={28} duration={0.5} />
-      </h2>
+      {heading}
     </div>
   );
 }
@@ -851,12 +870,12 @@ function OptionPill({
 }) {
   const [hover, setHover] = useState(false);
 
-  const surfaceBase = "rgba(255,255,255,0.32)";
-  const surfaceHover = "rgba(255,255,255,0.55)";
-  const surfaceSelected = "rgba(155,146,106,0.22)";
-  const borderBase = "rgba(255,255,255,0.55)";
-  const borderHover = "rgba(255,255,255,0.85)";
-  const borderSelected = "rgba(155,146,106,0.55)";
+  const surfaceBase = "rgba(255,255,255,0.42)";
+  const surfaceHover = "rgba(255,255,255,0.62)";
+  const surfaceSelected = "rgba(155,146,106,0.3)";
+  const borderBase = "rgba(255,255,255,0.78)";
+  const borderHover = "rgba(255,255,255,0.95)";
+  const borderSelected = "rgba(155,146,106,0.7)";
 
   const bg = isSelected ? surfaceSelected : hover ? surfaceHover : surfaceBase;
   const border = isSelected ? borderSelected : hover ? borderHover : borderBase;
@@ -896,11 +915,11 @@ function OptionPill({
         letterSpacing: "-0.02em",
         lineHeight: 1,
         cursor: "pointer",
-        backdropFilter: "blur(22px) saturate(1.6)",
-        WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+        backdropFilter: "blur(24px) saturate(1.7)",
+        WebkitBackdropFilter: "blur(24px) saturate(1.7)",
         boxShadow: hover
-          ? "inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(12,11,7,0.05), 0 18px 38px rgba(12,11,7,0.14)"
-          : "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(12,11,7,0.05), 0 10px 28px rgba(12,11,7,0.08)",
+          ? "inset 0 1.5px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(12,11,7,0.06), 0 22px 44px rgba(12,11,7,0.18)"
+          : "inset 0 1.5px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(12,11,7,0.06), 0 14px 32px rgba(12,11,7,0.12)",
         opacity: isDimmed ? 0.4 : 1,
         transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, opacity 0.4s ${EASE}, transform 0.5s ${POP}, box-shadow 0.5s ${EASE}`,
         transform: `translateY(${isSelected ? -3 : hover ? -2 : 0}px) translateX(${
@@ -1023,9 +1042,26 @@ function ContactStep({
   return (
     <div
       key={revealKey}
-      style={{ display: "flex", flexDirection: "column", gap: 28 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        gap: 22,
+        padding: "40px clamp(28px, 4vw, 52px) 36px",
+        borderRadius: 32,
+        background: "rgba(255,255,255,0.34)",
+        border: "1px solid rgba(255,255,255,0.78)",
+        backdropFilter: "blur(26px) saturate(1.7)",
+        WebkitBackdropFilter: "blur(26px) saturate(1.7)",
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(12,11,7,0.06), 0 30px 60px rgba(12,11,7,0.22)",
+        maxWidth: "min(92vw, 600px)",
+        animation: `cfRise 0.8s ${EASE} 0.1s both`,
+      }}
     >
-      <Question text="Wie erreichen wir Sie?" align="center" />
+      <div style={{ textAlign: "center" }}>
+        <Question text="Wie erreichen wir Sie?" align="center" bare />
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -1034,8 +1070,8 @@ function ContactStep({
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "18px 22px",
-          marginTop: 6,
+          gap: "16px 22px",
+          marginTop: 2,
         }}
       >
         <Field label="Name" value={name} onChange={onName} delay={0.35} required />
@@ -1069,7 +1105,7 @@ function ContactStep({
             gridColumn: "1 / -1",
             display: "flex",
             justifyContent: "center",
-            marginTop: 6,
+            marginTop: 8,
             animation: `cfRise 0.7s ${EASE} 0.7s both`,
           }}
         >
@@ -1184,14 +1220,14 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
           disabled
             ? "rgba(12,11,7,0.18)"
             : hover
-            ? "rgba(255,255,255,0.85)"
-            : "rgba(255,255,255,0.55)"
+            ? "rgba(255,255,255,0.95)"
+            : "rgba(255,255,255,0.78)"
         }`,
         background: disabled
-          ? "rgba(255,255,255,0.22)"
+          ? "rgba(255,255,255,0.26)"
           : hover
-          ? "rgba(255,255,255,0.55)"
-          : "rgba(255,255,255,0.35)",
+          ? "rgba(255,255,255,0.62)"
+          : "rgba(255,255,255,0.44)",
         color: disabled ? "rgba(12,11,7,0.4)" : INK,
         borderRadius: 999,
         fontFamily: "inherit",
@@ -1200,13 +1236,13 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
         letterSpacing: "0.14em",
         textTransform: "uppercase",
         cursor: disabled ? "not-allowed" : "pointer",
-        backdropFilter: "blur(22px) saturate(1.6)",
-        WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+        backdropFilter: "blur(24px) saturate(1.7)",
+        WebkitBackdropFilter: "blur(24px) saturate(1.7)",
         boxShadow: disabled
           ? "none"
           : hover
-          ? "inset 0 1px 0 rgba(255,255,255,0.85), 0 18px 38px rgba(12,11,7,0.16)"
-          : "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(12,11,7,0.05), 0 12px 28px rgba(12,11,7,0.1)",
+          ? "inset 0 1.5px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(12,11,7,0.06), 0 22px 44px rgba(12,11,7,0.2)"
+          : "inset 0 1.5px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(12,11,7,0.06), 0 14px 32px rgba(12,11,7,0.14)",
         transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, transform 0.4s ${POP}, box-shadow 0.4s ${EASE}`,
         transform: `translateY(${disabled ? 0 : hover ? -2 : 0}px) translateX(${
           hover && !disabled ? 2 : 0
@@ -1270,12 +1306,12 @@ function ThanksStep({
           gap: 22,
           padding: "44px 52px 40px",
           borderRadius: 32,
-          background: "rgba(255,255,255,0.28)",
-          border: "1px solid rgba(255,255,255,0.55)",
-          backdropFilter: "blur(24px) saturate(1.6)",
-          WebkitBackdropFilter: "blur(24px) saturate(1.6)",
+          background: "rgba(255,255,255,0.36)",
+          border: "1px solid rgba(255,255,255,0.78)",
+          backdropFilter: "blur(26px) saturate(1.7)",
+          WebkitBackdropFilter: "blur(26px) saturate(1.7)",
           boxShadow:
-            "inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(12,11,7,0.05), 0 28px 60px rgba(12,11,7,0.18)",
+            "inset 0 1.5px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(12,11,7,0.06), 0 36px 72px rgba(12,11,7,0.24)",
           maxWidth: "min(92vw, 520px)",
           animation: `cfRise 0.8s ${EASE} 0.1s both`,
         }}
@@ -1370,17 +1406,17 @@ function ThanksStep({
                   alignItems: "center",
                   padding: "8px 16px",
                   borderRadius: 999,
-                  border: "1px solid rgba(255,255,255,0.55)",
-                  background: "rgba(255,255,255,0.32)",
-                  backdropFilter: "blur(14px) saturate(1.5)",
-                  WebkitBackdropFilter: "blur(14px) saturate(1.5)",
+                  border: "1px solid rgba(255,255,255,0.78)",
+                  background: "rgba(255,255,255,0.4)",
+                  backdropFilter: "blur(16px) saturate(1.7)",
+                  WebkitBackdropFilter: "blur(16px) saturate(1.7)",
                   color: INK,
                   fontSize: 12,
                   fontWeight: 400,
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
                   boxShadow:
-                    "inset 0 1px 0 rgba(255,255,255,0.7), 0 6px 16px rgba(12,11,7,0.08)",
+                    "inset 0 1.5px 0 rgba(255,255,255,0.9), 0 8px 18px rgba(12,11,7,0.1)",
                   animation: `cfRise 0.6s ${EASE} ${0.7 + i * 0.08}s both`,
                 }}
               >
@@ -1403,11 +1439,11 @@ function ThanksStep({
             gap: 12,
             padding: "13px 26px",
             border: `1px solid ${
-              closeHover ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)"
+              closeHover ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.78)"
             }`,
             background: closeHover
-              ? "rgba(255,255,255,0.55)"
-              : "rgba(255,255,255,0.32)",
+              ? "rgba(255,255,255,0.62)"
+              : "rgba(255,255,255,0.44)",
             color: INK,
             borderRadius: 999,
             fontFamily: "inherit",
@@ -1416,11 +1452,11 @@ function ThanksStep({
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             cursor: "pointer",
-            backdropFilter: "blur(18px) saturate(1.6)",
-            WebkitBackdropFilter: "blur(18px) saturate(1.6)",
+            backdropFilter: "blur(20px) saturate(1.7)",
+            WebkitBackdropFilter: "blur(20px) saturate(1.7)",
             boxShadow: closeHover
-              ? "inset 0 1px 0 rgba(255,255,255,0.85), 0 14px 30px rgba(12,11,7,0.14)"
-              : "inset 0 1px 0 rgba(255,255,255,0.7), 0 10px 24px rgba(12,11,7,0.1)",
+              ? "inset 0 1.5px 0 rgba(255,255,255,0.95), 0 18px 36px rgba(12,11,7,0.18)"
+              : "inset 0 1.5px 0 rgba(255,255,255,0.85), 0 14px 30px rgba(12,11,7,0.12)",
             transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, transform 0.4s ${POP}, box-shadow 0.4s ${EASE}`,
             transform: `translateY(${closeHover ? -2 : 0}px)`,
             animation: `cfRise 0.7s ${EASE} 0.85s both`,
