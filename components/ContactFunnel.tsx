@@ -32,23 +32,12 @@ const TIMELINES: Pill[] = [
   { id: "later", label: "Noch unverbindlich",  image: "/images/proj-09.jpg" },
 ];
 
-const BUDGETS: Pill[] = [
-  { id: "s",  label: "Bis 10.000 €",   image: "/images/proj-04.jpg" },
-  { id: "m",  label: "10 – 25.000 €",  image: "/images/proj-02.jpg" },
-  { id: "l",  label: "25 – 50.000 €",  image: "/images/proj-09.jpg" },
-  { id: "xl", label: "Über 50.000 €",  image: "/images/proj-01.jpg" },
-];
-
-const DEFAULT_BG = "/images/proj-04.jpg";
-
 /* Pool of all images we may show — used so we can preload + render them
    all stacked, only the active one opaque. */
 const ALL_IMAGES = Array.from(
   new Set([
-    DEFAULT_BG,
     ...PROJECT_KINDS.map((p) => p.image),
     ...TIMELINES.map((t) => t.image),
-    ...BUDGETS.map((b) => b.image),
   ])
 );
 
@@ -57,12 +46,19 @@ type Anchor = { x: number; y: number; align: "left" | "right" | "center"; vAlign
 const STEP_ANCHORS: Anchor[] = [
   { x: 10, y: 50, align: "left",   vAlign: "center" }, // 0 project
   { x: 90, y: 56, align: "right",  vAlign: "center" }, // 1 timeline
-  { x: 14, y: 62, align: "left",   vAlign: "bottom" }, // 2 budget
-  { x: 50, y: 50, align: "center", vAlign: "center" }, // 3 contact
-  { x: 50, y: 50, align: "center", vAlign: "center" }, // 4 thanks
+  { x: 50, y: 50, align: "center", vAlign: "center" }, // 2 contact
+  { x: 50, y: 50, align: "center", vAlign: "center" }, // 3 thanks
 ];
 
-const TOTAL_STEPS = 5;
+/* Per-step base color shown when no option is hovered or selected. */
+const STEP_COLORS = [
+  "#6e8a6e", // 0 — sage green
+  "#6f9ec0", // 1 — sky blue
+  "#8e424d", // 2 — burgundy
+  "#ebe8e2", // 3 — cream (thanks)
+];
+
+const TOTAL_STEPS = 4;
 
 /* ──────────────────────────────────────────────────────────────────────────
    Fill-reveal text: each character fades from ghost-grey to ink, in
@@ -145,34 +141,17 @@ export default function ContactFunnel() {
 
   const [project, setProject] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<string | null>(null);
-  const [budget, setBudget] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
 
-  /* Live previews — hovering an option fades that option's image in
-     under the milky wash. The "revealing" state briefly lifts the
-     milky wash when you actually commit, so the image reads through
-     and "ports" you to the next step. */
+  /* Hover/commit preview — the image shows only while previewing or
+     while a selection is being committed (reveal moment). Otherwise
+     the step's base color is visible. */
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [revealing, setRevealing] = useState(false);
-
-  /* Resolve the active backdrop image based on the user's choices */
-  const activeImage = (() => {
-    if (previewImage) return previewImage;
-    if (step >= 4) return BUDGETS.find((b) => b.id === budget)?.image || DEFAULT_BG;
-    if (step >= 3) return BUDGETS.find((b) => b.id === budget)?.image
-        || TIMELINES.find((t) => t.id === timeline)?.image
-        || PROJECT_KINDS.find((p) => p.id === project)?.image
-        || DEFAULT_BG;
-    if (step >= 2) return TIMELINES.find((t) => t.id === timeline)?.image
-        || PROJECT_KINDS.find((p) => p.id === project)?.image
-        || DEFAULT_BG;
-    if (step >= 1) return PROJECT_KINDS.find((p) => p.id === project)?.image
-        || DEFAULT_BG;
-    return DEFAULT_BG;
-  })();
+  const stepColor = STEP_COLORS[step] ?? "#ebe8e2";
 
   /* CTA reveal after hero intro */
   useEffect(() => {
@@ -203,11 +182,12 @@ export default function ContactFunnel() {
       setStep(0);
       setProject(null);
       setTimeline(null);
-      setBudget(null);
       setName("");
       setEmail("");
       setPhone("");
       setMessage("");
+      setPreviewImage(null);
+      setRevealing(false);
     }, 700);
   };
 
@@ -376,8 +356,20 @@ export default function ContactFunnel() {
             transition: `opacity 0.6s ${EASE}`,
           }}
         >
-          {/* Pre-mount every image we may show, only the active one
-              opaque. Heavy blur — they read as soft color hints. */}
+          {/* Base — solid step color, fades on step change */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: stepColor,
+              transition: `background 0.8s ${EASE}`,
+            }}
+          />
+
+          {/* Image layers — only become visible while previewing an
+              option or committing one. Heavy blur so they read as
+              atmospheric, not photographic. */}
           {ALL_IMAGES.map((src) => (
             <div
               key={src}
@@ -389,33 +381,42 @@ export default function ContactFunnel() {
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 filter: revealing
-                  ? "blur(34px) saturate(1.3)"
-                  : "blur(58px) saturate(1.15)",
-                transform: `scale(${revealing ? 1.06 : 1.18})`,
-                opacity: activeImage === src ? 1 : 0,
-                transition: `opacity 1s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
+                  ? "blur(30px) saturate(1.3)"
+                  : "blur(52px) saturate(1.2)",
+                transform: `scale(${revealing ? 1.06 : 1.16})`,
+                opacity: previewImage === src ? 1 : 0,
+                transition: `opacity 0.9s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
               }}
             />
           ))}
-          {/* Milky wash — lifts a bit during a "reveal moment" so the
-              image briefly comes through, then settles back. */}
+
+          {/* Milky wash — full when at rest (color soft), thins on
+              hover so the image reads through, lifts further on
+              commit so it "ports" you through. */}
           <div
             aria-hidden
             style={{
               position: "absolute",
               inset: 0,
               background: revealing
-                ? "linear-gradient(180deg, rgba(245,243,238,0.38) 0%, rgba(235,232,226,0.32) 50%, rgba(245,243,238,0.42) 100%)"
-                : "linear-gradient(180deg, rgba(245,243,238,0.78) 0%, rgba(235,232,226,0.72) 50%, rgba(245,243,238,0.82) 100%)",
+                ? "linear-gradient(180deg, rgba(245,243,238,0.28) 0%, rgba(235,232,226,0.24) 50%, rgba(245,243,238,0.32) 100%)"
+                : previewImage
+                ? "linear-gradient(180deg, rgba(245,243,238,0.4) 0%, rgba(235,232,226,0.36) 50%, rgba(245,243,238,0.44) 100%)"
+                : "linear-gradient(180deg, rgba(245,243,238,0.55) 0%, rgba(235,232,226,0.5) 50%, rgba(245,243,238,0.58) 100%)",
               backdropFilter: revealing
-                ? "blur(4px) saturate(1.05)"
-                : "blur(8px) saturate(1.1)",
+                ? "blur(3px) saturate(1.05)"
+                : previewImage
+                ? "blur(5px) saturate(1.1)"
+                : "blur(10px) saturate(1.15)",
               WebkitBackdropFilter: revealing
-                ? "blur(4px) saturate(1.05)"
-                : "blur(8px) saturate(1.1)",
+                ? "blur(3px) saturate(1.05)"
+                : previewImage
+                ? "blur(5px) saturate(1.1)"
+                : "blur(10px) saturate(1.15)",
               transition: `background 0.6s ${EASE}, backdrop-filter 0.6s ${EASE}, -webkit-backdrop-filter 0.6s ${EASE}`,
             }}
           />
+
           {/* Very faint grain to break up flatness */}
           <div
             aria-hidden
@@ -423,7 +424,7 @@ export default function ContactFunnel() {
               position: "absolute",
               inset: 0,
               backgroundImage: "url(/tile-bg.svg)",
-              opacity: revealing ? 0.08 : 0.16,
+              opacity: revealing ? 0.06 : previewImage ? 0.1 : 0.16,
               mixBlendMode: "multiply",
               pointerEvents: "none",
               transition: `opacity 0.6s ${EASE}`,
@@ -545,19 +546,8 @@ export default function ContactFunnel() {
                   />
                 )}
                 {i === 2 && (
-                  <PillStep
-                    revealKey={revealKeys[2]}
-                    title="In welchem Rahmen?"
-                    options={BUDGETS}
-                    selected={budget}
-                    onSelect={(id, image) => choose(setBudget, id, 2, image)}
-                    onHover={setPreviewImage}
-                    align="left"
-                  />
-                )}
-                {i === 3 && (
                   <ContactStep
-                    revealKey={revealKeys[3]}
+                    revealKey={revealKeys[2]}
                     name={name}
                     email={email}
                     phone={phone}
@@ -570,9 +560,9 @@ export default function ContactFunnel() {
                     canSubmit={canSubmit}
                   />
                 )}
-                {i === 4 && (
+                {i === 3 && (
                   <ThanksStep
-                    revealKey={revealKeys[4]}
+                    revealKey={revealKeys[3]}
                     name={name}
                     onClose={handleClose}
                   />
