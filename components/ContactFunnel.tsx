@@ -275,7 +275,7 @@ export default function ContactFunnel() {
         }
       `}</style>
 
-      {/* ─── CTA ─── */}
+      {/* ─── CTA — glassy ─── */}
       <button
         type="button"
         onClick={handleOpen}
@@ -292,8 +292,8 @@ export default function ContactFunnel() {
           alignItems: "center",
           gap: 14,
           padding: "14px 22px 14px 26px",
-          border: "none",
-          background: INK,
+          border: "1px solid rgba(255,255,255,0.18)",
+          background: "rgba(28,25,15,0.5)",
           color: "#fff",
           borderRadius: 999,
           fontFamily: "inherit",
@@ -301,16 +301,24 @@ export default function ContactFunnel() {
           fontWeight: 400,
           letterSpacing: "0.08em",
           textTransform: "uppercase",
+          backdropFilter: "blur(22px) saturate(1.6)",
+          WebkitBackdropFilter: "blur(22px) saturate(1.6)",
           boxShadow:
-            "0 14px 34px rgba(25,23,14,0.22), 0 2px 6px rgba(25,23,14,0.16)",
-          transition: `opacity 0.9s ${EASE}, transform 0.9s ${EASE}, background 0.3s ease, box-shadow 0.3s ease`,
+            "inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.2), 0 18px 38px rgba(12,11,7,0.28)",
+          transition: `opacity 0.9s ${EASE}, transform 0.9s ${EASE}, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease`,
           willChange: "transform, opacity",
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "#1f1d14";
+          (e.currentTarget as HTMLElement).style.background =
+            "rgba(28,25,15,0.65)";
+          (e.currentTarget as HTMLElement).style.borderColor =
+            "rgba(255,255,255,0.28)";
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.background = INK;
+          (e.currentTarget as HTMLElement).style.background =
+            "rgba(28,25,15,0.5)";
+          (e.currentTarget as HTMLElement).style.borderColor =
+            "rgba(255,255,255,0.18)";
         }}
       >
         <span

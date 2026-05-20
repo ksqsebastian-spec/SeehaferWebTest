@@ -62,17 +62,23 @@ export default function Navbar() {
         transition: "all 0.5s cubic-bezier(0.85, 0.09, 0.15, 0.91)",
       }}
     >
-      {/* Pill container */}
+      {/* Pill container — frosted glass */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 0,
-          background: scrolled ? "rgba(53,49,31,0.95)" : "#35311f",
+          background: scrolled
+            ? "rgba(28,25,15,0.55)"
+            : "rgba(28,25,15,0.45)",
           borderRadius: 100,
           padding: "10px 24px",
-          backdropFilter: "blur(12px)",
-          transition: "background 0.4s ease",
+          border: "1px solid rgba(255,255,255,0.14)",
+          backdropFilter: "blur(22px) saturate(1.6)",
+          WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.18), 0 14px 32px rgba(12,11,7,0.22)",
+          transition: "background 0.4s ease, box-shadow 0.4s ease",
         }}
       >
         {/* Logo mark — stylized "S" for Seehafer */}
@@ -155,11 +161,14 @@ export default function Navbar() {
             >
             <div
               style={{
-                background: "#35311f",
+                background: "rgba(28,25,15,0.55)",
+                border: "1px solid rgba(255,255,255,0.14)",
                 borderRadius: 14,
                 padding: "8px",
-                backdropFilter: "blur(12px)",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+                backdropFilter: "blur(22px) saturate(1.6)",
+                WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.2), 0 14px 32px rgba(12,11,7,0.28)",
               }}
             >
               {projects.map((p) => (
