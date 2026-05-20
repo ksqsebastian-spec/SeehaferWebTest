@@ -74,7 +74,7 @@ export default function Cursor() {
     <div
       ref={cursorRef}
       className="cursor"
-      style={{ opacity: visible ? 1 : 0, transition: "opacity 0.3s ease" }}
+      style={{ opacity: visible ? 1 : 0 }}
     />
   );
 }
