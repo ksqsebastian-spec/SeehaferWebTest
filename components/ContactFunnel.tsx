@@ -3,27 +3,25 @@
 import { useState, useEffect, useMemo } from "react";
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Design tokens — match the rest of the site
+   Tokens
    ────────────────────────────────────────────────────────────────────────── */
 const EASE = "cubic-bezier(0.85, 0.09, 0.15, 0.91)";
 const POP = "cubic-bezier(0.16, 1, 0.3, 1)";
 const TAN = "#9b926a";
-const CREAM = "#ebe8e2";
-const INK = "#0c0b07";   // near-black, warm undertone
-const HAIR = "rgba(12,11,7,0.12)";
+const INK = "#0c0b07";
+const GHOST = "rgba(12,11,7,0.16)";
 const MUTED = "rgba(12,11,7,0.5)";
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Funnel data
+   Data
    ────────────────────────────────────────────────────────────────────────── */
-type ProjectKind = { id: string; label: string; image: string };
 type Pill = { id: string; label: string };
 
-const PROJECT_KINDS: ProjectKind[] = [
-  { id: "bad",      label: "Badezimmer", image: "/images/proj-01.jpg" },
-  { id: "kueche",   label: "Küche",      image: "/images/proj-05.jpg" },
-  { id: "terrasse", label: "Terrasse",   image: "/images/proj-02.jpg" },
-  { id: "stein",    label: "Naturstein", image: "/images/proj-07.jpg" },
+const PROJECT_KINDS: Pill[] = [
+  { id: "bad",      label: "Badezimmer" },
+  { id: "kueche",   label: "Küche" },
+  { id: "terrasse", label: "Terrasse" },
+  { id: "stein",    label: "Naturstein" },
 ];
 
 const TIMELINES: Pill[] = [
@@ -40,21 +38,52 @@ const BUDGETS: Pill[] = [
   { id: "xl", label: "Über 50.000 €" },
 ];
 
-const TOTAL_STEPS = 5; // 0..4 — last is the thank-you screen
+/* Backdrop image rotates per step — each blurred to abstraction so it reads
+   as atmosphere, not a portfolio shot. */
+const STEP_BGS = [
+  "/images/proj-04.jpg", // pool — blue/serene
+  "/images/proj-02.jpg", // terrace — warm stone
+  "/images/proj-06.jpg", // wohnen — wood
+  "/images/proj-01.jpg", // bath — tile
+  "/images/proj-07.jpg", // stone — golden
+];
+
+/* Anchor + alignment per step. Numbers are percentages of the viewport. */
+type Anchor = { x: number; y: number; align: "left" | "right" | "center"; vAlign: "top" | "center" | "bottom" };
+const STEP_ANCHORS: Anchor[] = [
+  { x: 12, y: 50, align: "left",   vAlign: "center" }, // 0 project
+  { x: 88, y: 56, align: "right",  vAlign: "center" }, // 1 timeline — offset right + down
+  { x: 16, y: 64, align: "left",   vAlign: "bottom" }, // 2 budget — offset left + lower
+  { x: 50, y: 50, align: "center", vAlign: "center" }, // 3 contact — centered
+  { x: 50, y: 50, align: "center", vAlign: "center" }, // 4 thanks
+];
+
+const TOTAL_STEPS = 5;
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Char-reveal heading (matches Hero's SplitText vibe)
+   Fill-reveal text: each character fades from ghost-grey to ink, in order.
    ────────────────────────────────────────────────────────────────────────── */
-function SplitHeading({ text, baseDelay = 0 }: { text: string; baseDelay?: number }) {
+function FillReveal({
+  text,
+  delay = 0,
+  charMs = 26,
+  duration = 0.55,
+}: {
+  text: string;
+  delay?: number;
+  charMs?: number;
+  duration?: number;
+}) {
   return (
-    <span style={{ display: "inline-block", overflow: "hidden", lineHeight: 1.1 }}>
+    <span style={{ display: "inline" }}>
       {text.split("").map((ch, i) => (
         <span
           key={i}
           style={{
             display: "inline-block",
-            animation: `cfReveal 0.9s ${EASE} both`,
-            animationDelay: `${baseDelay + i * 0.025}s`,
+            color: GHOST,
+            animation: `cfFill ${duration}s linear both`,
+            animationDelay: `${delay + (i * charMs) / 1000}s`,
             whiteSpace: "pre",
           }}
         >
@@ -70,11 +99,12 @@ function SplitHeading({ text, baseDelay = 0 }: { text: string; baseDelay?: numbe
    ────────────────────────────────────────────────────────────────────────── */
 export default function ContactFunnel() {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false); // controls modal animation
+  const [mounted, setMounted] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(false);
   const [step, setStep] = useState(0);
-  // Per-step heading reveal keys — incremented on entry so headlines replay
-  const [revealKeys, setRevealKeys] = useState<number[]>(() => Array(TOTAL_STEPS).fill(0));
+  const [revealKeys, setRevealKeys] = useState<number[]>(() =>
+    Array(TOTAL_STEPS).fill(0)
+  );
 
   const [project, setProject] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<string | null>(null);
@@ -84,7 +114,7 @@ export default function ContactFunnel() {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
 
-  /* Show CTA after the hero intro completes (~2.2s) */
+  /* CTA reveal after hero intro */
   useEffect(() => {
     const t = setTimeout(() => setCtaVisible(true), 2400);
     return () => clearTimeout(t);
@@ -101,9 +131,7 @@ export default function ContactFunnel() {
   const handleOpen = () => {
     setOpen(true);
     document.body.style.overflow = "hidden";
-    // Allow one paint with hidden state, then animate to visible
     requestAnimationFrame(() => setMounted(true));
-    // Replay the first step's heading on each open
     bumpRevealKey(0);
   };
 
@@ -123,7 +151,6 @@ export default function ContactFunnel() {
     }, 700);
   };
 
-  /* Esc closes */
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -146,7 +173,6 @@ export default function ContactFunnel() {
     bumpRevealKey(ns);
   };
 
-  /* Auto-advance on selection for the choice steps */
   const choose = (
     setter: (v: string) => void,
     value: string,
@@ -154,7 +180,7 @@ export default function ContactFunnel() {
   ) => {
     setter(value);
     if (step === advanceFrom) {
-      setTimeout(() => goNext(), 420);
+      setTimeout(() => goNext(), 520);
     }
   };
 
@@ -163,50 +189,36 @@ export default function ContactFunnel() {
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!canSubmit) return;
-    // Simulated submit — no backend wired up
     goNext();
   };
 
-  /* ────────────────────────────────────────────────────────────────────────
-     Render
-     ──────────────────────────────────────────────────────────────────────── */
   return (
     <>
-      {/* keyframes used throughout */}
       <style>{`
-        @keyframes cfReveal {
-          from { opacity: 0; transform: translate3d(0, 110%, 0); }
-          to   { opacity: 1; transform: translate3d(0, 0, 0); }
+        @keyframes cfFill {
+          from { color: ${GHOST}; }
+          to   { color: ${INK}; }
         }
         @keyframes cfPing {
           0%   { transform: scale(0.6); opacity: 0.9; }
           80%  { transform: scale(2.4); opacity: 0; }
           100% { transform: scale(2.4); opacity: 0; }
         }
-        @keyframes cfFloat {
-          0%, 100% { transform: translateY(0) translateX(-50%); }
-          50%      { transform: translateY(-4px) translateX(-50%); }
-        }
-        @keyframes cfBackdrop {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes cfRiseIn {
-          from { transform: translateY(40px); opacity: 0; }
-          to   { transform: translateY(0); opacity: 1; }
+        @keyframes cfRise {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes cfCheck {
-          0%   { stroke-dashoffset: 60; }
-          100% { stroke-dashoffset: 0; }
+          from { stroke-dashoffset: 60; }
+          to   { stroke-dashoffset: 0; }
         }
         @keyframes cfRing {
-          0%   { transform: scale(0.6); opacity: 0; }
-          50%  { opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
+          from { transform: scale(0.55); opacity: 0; }
+          to   { transform: scale(1); opacity: 1; }
         }
       `}</style>
 
-      {/* ─── Floating CTA on the hero ─── */}
+      {/* ─── CTA ─── */}
       <button
         type="button"
         onClick={handleOpen}
@@ -232,30 +244,21 @@ export default function ContactFunnel() {
           fontWeight: 400,
           letterSpacing: "0.08em",
           textTransform: "uppercase",
-          boxShadow: "0 14px 34px rgba(25,23,14,0.22), 0 2px 6px rgba(25,23,14,0.16)",
+          boxShadow:
+            "0 14px 34px rgba(25,23,14,0.22), 0 2px 6px rgba(25,23,14,0.16)",
           transition: `opacity 0.9s ${EASE}, transform 0.9s ${EASE}, background 0.3s ease, box-shadow 0.3s ease`,
           willChange: "transform, opacity",
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.background = "#1f1d14";
-          (e.currentTarget as HTMLElement).style.boxShadow =
-            "0 18px 40px rgba(25,23,14,0.28), 0 3px 8px rgba(25,23,14,0.2)";
         }}
         onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.background = INK;
-          (e.currentTarget as HTMLElement).style.boxShadow =
-            "0 14px 34px rgba(25,23,14,0.22), 0 2px 6px rgba(25,23,14,0.16)";
         }}
       >
-        {/* Pulsing tan dot — the attention-grabber */}
         <span
           aria-hidden
-          style={{
-            position: "relative",
-            width: 8,
-            height: 8,
-            display: "inline-block",
-          }}
+          style={{ position: "relative", width: 8, height: 8, display: "inline-block" }}
         >
           <span
             style={{
@@ -297,316 +300,258 @@ export default function ContactFunnel() {
             position: "fixed",
             inset: 0,
             zIndex: 200,
-            display: "flex",
-            alignItems: "stretch",
-            justifyContent: "center",
-            pointerEvents: "auto",
+            overflow: "hidden",
+            opacity: mounted ? 1 : 0,
+            transition: `opacity 0.6s ${EASE}`,
           }}
         >
-          {/* Backdrop */}
-          <div
-            onClick={handleClose}
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "rgba(25, 23, 14, 0.78)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-              opacity: mounted ? 1 : 0,
-              transition: `opacity 0.6s ${EASE}`,
-            }}
-          />
-
-          {/* Panel */}
-          <div
-            style={{
-              position: "relative",
-              width: "min(100%, 1100px)",
-              margin: "auto",
-              maxHeight: "min(92vh, 760px)",
-              height: "min(92vh, 760px)",
-              borderRadius: 24,
-              background: CREAM,
-              overflow: "hidden",
-              boxShadow: "0 40px 100px rgba(25,23,14,0.5)",
-              transform: mounted ? "translateY(0)" : "translateY(60px)",
-              opacity: mounted ? 1 : 0,
-              transition: `transform 0.8s ${EASE}, opacity 0.5s ${EASE}`,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {/* Tile grid background — subtle, matches Hero */}
+          {/* Blurred scenic backdrops — one per step, crossfading. Heavy
+              blur reduces them to soft color/luminance hints behind the
+              milky wash. */}
+          {STEP_BGS.map((src, i) => (
             <div
+              key={src}
               aria-hidden
               style={{
                 position: "absolute",
-                inset: 0,
-                background: "url(/tile-bg.svg)",
-                opacity: 0.5,
-                pointerEvents: "none",
+                inset: -80,
+                backgroundImage: `url(${src})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(64px) saturate(1.15)",
+                transform: `scale(1.2) translateY(${(step - i) * -10}px)`,
+                opacity: step === i ? 1 : 0,
+                transition: `opacity 1.1s ${EASE}, transform 1.4s ${EASE}`,
               }}
             />
+          ))}
+          {/* Milky wash — opaque enough to feel like frosted/opal glass while
+              still passing through the scenery's warm/cool color cast. */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(245,243,238,0.78) 0%, rgba(235,232,226,0.72) 50%, rgba(245,243,238,0.82) 100%)",
+              backdropFilter: "blur(8px) saturate(1.1)",
+              WebkitBackdropFilter: "blur(8px) saturate(1.1)",
+            }}
+          />
+          {/* Very faint grain to break up flatness */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: "url(/tile-bg.svg)",
+              opacity: 0.18,
+              mixBlendMode: "multiply",
+              pointerEvents: "none",
+            }}
+          />
 
-            {/* Header: progress + close */}
-            <div
+          {/* Close */}
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="Schließen"
+            style={{
+              position: "absolute",
+              top: 28,
+              right: 32,
+              zIndex: 5,
+              width: 42,
+              height: 42,
+              borderRadius: 999,
+              border: "1px solid rgba(12,11,7,0.18)",
+              background: "rgba(235,232,226,0.5)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: INK,
+              transition: "background 0.25s ease, transform 0.25s ease",
+            }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLElement).style.background =
+                "rgba(235,232,226,0.85)")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLElement).style.background =
+                "rgba(235,232,226,0.5)")
+            }
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M1 1l12 12M13 1L1 13"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+
+          {/* Step counter — bottom-left, minimal */}
+          <div
+            style={{
+              position: "absolute",
+              left: 36,
+              bottom: 32,
+              zIndex: 5,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 12,
+              fontSize: 10,
+              letterSpacing: "0.28em",
+              textTransform: "uppercase",
+              color: MUTED,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            <span style={{ color: INK, fontWeight: 400 }}>
+              {String(Math.min(step + 1, TOTAL_STEPS - 1)).padStart(2, "0")}
+            </span>
+            <span
+              aria-hidden
               style={{
+                width: 80,
+                height: 1,
+                background: "rgba(12,11,7,0.18)",
                 position: "relative",
-                zIndex: 2,
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-                padding: "22px 28px 0",
-              }}
-            >
-              {/* Step counter */}
-              <div
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.24em",
-                  textTransform: "uppercase",
-                  color: MUTED,
-                  whiteSpace: "nowrap",
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {step < TOTAL_STEPS - 1
-                  ? `${String(step + 1).padStart(2, "0")} / ${String(
-                      TOTAL_STEPS - 1
-                    ).padStart(2, "0")}`
-                  : "Geschafft"}
-              </div>
-
-              {/* Progress bar */}
-              <div
-                style={{
-                  flex: 1,
-                  height: 2,
-                  background: "rgba(12,11,7,0.12)",
-                  borderRadius: 2,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${((step + 1) / TOTAL_STEPS) * 100}%`,
-                    background: TAN,
-                    borderRadius: 2,
-                    transition: `width 0.7s ${EASE}`,
-                  }}
-                />
-              </div>
-
-              {/* Close */}
-              <button
-                type="button"
-                onClick={handleClose}
-                aria-label="Schließen"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 999,
-                  border: "1px solid rgba(12,11,7,0.18)",
-                  background: "transparent",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: INK,
-                  transition: "background 0.2s ease, transform 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.background =
-                    "rgba(12,11,7,0.08)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path
-                    d="M1 1l12 12M13 1L1 13"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Sliding track */}
-            <div
-              style={{
-                position: "relative",
-                flex: 1,
                 overflow: "hidden",
+                display: "inline-block",
               }}
             >
-              {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
-                const offset = i - step;
-                const isActive = i === step;
-                return (
-                  <div
-                    key={i}
-                    aria-hidden={!isActive}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      transform: `translateX(${offset * 100}%)`,
-                      transition: `transform 0.75s ${EASE}, opacity 0.6s ${EASE}`,
-                      opacity: isActive ? 1 : 0,
-                      pointerEvents: isActive ? "auto" : "none",
-                      overflowY: "auto",
-                    }}
-                  >
-                    {i === 0 && (
-                      <StepProject
-                        revealKey={revealKeys[0]}
-                        selected={project}
-                        onSelect={(id) => choose(setProject, id, 0)}
-                      />
-                    )}
-                    {i === 1 && (
-                      <StepPills
-                        revealKey={revealKeys[1]}
-                        eyebrow="02 / Zeitrahmen"
-                        title="Wann soll es losgehen?"
-                        subtitle="Damit wir den Auftrag in die Werkstatt einplanen."
-                        options={TIMELINES}
-                        selected={timeline}
-                        onSelect={(id) => choose(setTimeline, id, 1)}
-                      />
-                    )}
-                    {i === 2 && (
-                      <StepPills
-                        revealKey={revealKeys[2]}
-                        eyebrow="03 / Rahmen"
-                        title="In welchem Rahmen?"
-                        subtitle="Eine ungefähre Spanne reicht aus."
-                        options={BUDGETS}
-                        selected={budget}
-                        onSelect={(id) => choose(setBudget, id, 2)}
-                      />
-                    )}
-                    {i === 3 && (
-                      <StepContact
-                        revealKey={revealKeys[3]}
-                        name={name}
-                        email={email}
-                        phone={phone}
-                        message={message}
-                        onName={setName}
-                        onEmail={setEmail}
-                        onPhone={setPhone}
-                        onMessage={setMessage}
-                        onSubmit={handleSubmit}
-                      />
-                    )}
-                    {i === 4 && (
-                      <StepThanks
-                        revealKey={revealKeys[4]}
-                        name={name}
-                        onClose={handleClose}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Footer nav — only on input steps */}
-            <div
-              style={{
-                position: "relative",
-                zIndex: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "18px 28px 24px",
-                borderTop: "1px solid rgba(12,11,7,0.08)",
-                background: "rgba(235,232,226,0.6)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={goBack}
-                disabled={step === 0 || step === TOTAL_STEPS - 1}
+              <span
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 16px",
-                  border: "none",
-                  background: "transparent",
-                  color: INK,
-                  fontFamily: "inherit",
-                  fontSize: 12,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  opacity: step === 0 || step === TOTAL_STEPS - 1 ? 0.25 : 0.7,
-                  pointerEvents:
-                    step === 0 || step === TOTAL_STEPS - 1 ? "none" : "auto",
-                  transition: "opacity 0.25s ease, transform 0.25s ease",
+                  position: "absolute",
+                  inset: 0,
+                  background: INK,
+                  transformOrigin: "left",
+                  transform: `scaleX(${Math.min(
+                    (step + 1) / (TOTAL_STEPS - 1),
+                    1
+                  )})`,
+                  transition: `transform 0.8s ${EASE}`,
                 }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.opacity = "1";
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translateX(-3px)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.opacity = "0.7";
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translateX(0)";
-                }}
-              >
-                <svg width="14" height="12" viewBox="0 0 16 14" fill="none">
-                  <path
-                    d="M15 7H2M8 1L2 7l6 6"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Zurück
-              </button>
-
-              {/* Right side: skip on first three steps, submit on step 3 */}
-              {step <= 2 && (
-                <button
-                  type="button"
-                  onClick={goNext}
-                  style={{
-                    padding: "10px 16px",
-                    border: "none",
-                    background: "transparent",
-                    color: "rgba(12,11,7,0.5)",
-                    fontFamily: "inherit",
-                    fontSize: 12,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    transition: "color 0.2s ease",
-                  }}
-                  onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLElement).style.color = INK)
-                  }
-                  onMouseLeave={(e) =>
-                    ((e.currentTarget as HTMLElement).style.color =
-                      "rgba(12,11,7,0.5)")
-                  }
-                >
-                  Überspringen
-                </button>
-              )}
-              {step === 3 && (
-                <SubmitButton
-                  disabled={!canSubmit}
-                  onClick={() => handleSubmit()}
-                />
-              )}
-              {step === TOTAL_STEPS - 1 && <span />}
-            </div>
+              />
+            </span>
+            <span>{String(TOTAL_STEPS - 1).padStart(2, "0")}</span>
           </div>
+
+          {/* Back (subtle, only after step 0 and before thanks) */}
+          {step > 0 && step < TOTAL_STEPS - 1 && (
+            <button
+              type="button"
+              onClick={goBack}
+              style={{
+                position: "absolute",
+                right: 36,
+                bottom: 32,
+                zIndex: 5,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "6px 4px",
+                border: "none",
+                background: "transparent",
+                color: MUTED,
+                fontFamily: "inherit",
+                fontSize: 10,
+                letterSpacing: "0.24em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                transition: "color 0.25s ease, transform 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.color = INK;
+                (e.currentTarget as HTMLElement).style.transform =
+                  "translateX(-3px)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.color = MUTED;
+                (e.currentTarget as HTMLElement).style.transform =
+                  "translateX(0)";
+              }}
+            >
+              <svg width="14" height="10" viewBox="0 0 16 12" fill="none">
+                <path
+                  d="M15 6H2M7 1L2 6l5 5"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Zurück
+            </button>
+          )}
+
+          {/* Step content — anchored per step */}
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
+            const isActive = step === i;
+            const anchor = STEP_ANCHORS[i];
+            return (
+              <StepStage
+                key={i}
+                anchor={anchor}
+                isActive={isActive}
+                direction={i < step ? -1 : i > step ? 1 : 0}
+              >
+                {i === 0 && (
+                  <ProjectStep
+                    revealKey={revealKeys[0]}
+                    selected={project}
+                    onSelect={(id) => choose(setProject, id, 0)}
+                  />
+                )}
+                {i === 1 && (
+                  <PillStep
+                    revealKey={revealKeys[1]}
+                    title="Wann darf gestartet werden?"
+                    options={TIMELINES}
+                    selected={timeline}
+                    onSelect={(id) => choose(setTimeline, id, 1)}
+                    align="right"
+                  />
+                )}
+                {i === 2 && (
+                  <PillStep
+                    revealKey={revealKeys[2]}
+                    title="In welchem Rahmen?"
+                    options={BUDGETS}
+                    selected={budget}
+                    onSelect={(id) => choose(setBudget, id, 2)}
+                    align="left"
+                  />
+                )}
+                {i === 3 && (
+                  <ContactStep
+                    revealKey={revealKeys[3]}
+                    name={name}
+                    email={email}
+                    phone={phone}
+                    message={message}
+                    onName={setName}
+                    onEmail={setEmail}
+                    onPhone={setPhone}
+                    onMessage={setMessage}
+                    onSubmit={handleSubmit}
+                    canSubmit={canSubmit}
+                  />
+                )}
+                {i === 4 && (
+                  <ThanksStep
+                    revealKey={revealKeys[4]}
+                    name={name}
+                    onClose={handleClose}
+                  />
+                )}
+              </StepStage>
+            );
+          })}
         </div>
       )}
     </>
@@ -614,249 +559,224 @@ export default function ContactFunnel() {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Step 1 — Project kind (image cards)
+   Stage wrapper — anchors the step at its offset and fades it in/out
    ────────────────────────────────────────────────────────────────────────── */
-function StepProject({
-  revealKey,
-  selected,
-  onSelect,
+function StepStage({
+  anchor,
+  isActive,
+  direction,
+  children,
 }: {
-  revealKey: number;
-  selected: string | null;
-  onSelect: (id: string) => void;
+  anchor: Anchor;
+  isActive: boolean;
+  direction: -1 | 0 | 1;
+  children: React.ReactNode;
 }) {
+  // Translate the anchored point so x/y act as the alignment edge
+  const tx =
+    anchor.align === "left" ? "0%" : anchor.align === "right" ? "-100%" : "-50%";
+  const ty =
+    anchor.vAlign === "top"
+      ? "0%"
+      : anchor.vAlign === "bottom"
+      ? "-100%"
+      : "-50%";
+
+  const slide = isActive ? 0 : direction === -1 ? -28 : 28;
+
   return (
-    <div style={{ padding: "40px 44px 32px", height: "100%", display: "flex", flexDirection: "column" }}>
-      <Eyebrow text="01 / Vorhaben" />
-      <Headline key={revealKey} text="Was haben Sie vor?" />
-      <Subtitle text="Eine grobe Richtung — Details klären wir im Gespräch." />
-
-      <div
-        style={{
-          marginTop: 40,
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 16,
-          flex: 1,
-        }}
-      >
-        {PROJECT_KINDS.map((k, i) => {
-          const isSelected = selected === k.id;
-          const isFaded = selected !== null && !isSelected;
-          const num = String(i + 1).padStart(2, "0");
-          return (
-            <button
-              type="button"
-              key={k.id}
-              onClick={() => onSelect(k.id)}
-              style={{
-                position: "relative",
-                overflow: "hidden",
-                borderRadius: 4,
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                background: INK,
-                aspectRatio: "3 / 4",
-                opacity: isFaded ? 0.32 : 1,
-                transform: isSelected ? "translateY(-3px)" : "translateY(0)",
-                transition: `opacity 0.4s ${EASE}, transform 0.55s ${EASE}, box-shadow 0.4s ${EASE}`,
-                boxShadow: isSelected
-                  ? `inset 0 0 0 1.5px ${TAN}, 0 18px 36px rgba(12,11,7,0.32)`
-                  : "0 6px 16px rgba(12,11,7,0.14)",
-                animation: `cfRiseIn 0.7s ${EASE} both`,
-                animationDelay: `${0.18 + i * 0.07}s`,
-              }}
-              onMouseEnter={(e) => {
-                const img = (e.currentTarget as HTMLElement).querySelector("img");
-                if (img) (img as HTMLElement).style.transform = "scale(1.06)";
-              }}
-              onMouseLeave={(e) => {
-                const img = (e.currentTarget as HTMLElement).querySelector("img");
-                if (img) (img as HTMLElement).style.transform = "scale(1)";
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={k.image}
-                alt={k.label}
-                draggable="false"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                  transition: `transform 0.8s ${EASE}`,
-                }}
-              />
-              {/* Gradient overlay */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(to bottom, transparent 36%, rgba(12,11,7,0.78) 100%)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              {/* Top: tan numeral */}
-              <div
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  top: 14,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  fontSize: 10,
-                  letterSpacing: "0.24em",
-                  textTransform: "uppercase",
-                  color: isSelected ? TAN : "rgba(255,255,255,0.85)",
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                <span>{num}</span>
-                <span
-                  aria-hidden
-                  style={{
-                    width: 14,
-                    height: 1,
-                    background: isSelected ? TAN : "rgba(255,255,255,0.6)",
-                  }}
-                />
-              </div>
-
-              {/* Bottom label + indicator */}
-              <div
-                style={{
-                  position: "absolute",
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                  display: "flex",
-                  alignItems: "flex-end",
-                  justifyContent: "space-between",
-                  gap: 10,
-                  color: "#fff",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 300,
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1.1,
-                  }}
-                >
-                  {k.label}
-                </span>
-                <span
-                  aria-hidden
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 22,
-                    height: 22,
-                    color: isSelected ? TAN : "rgba(255,255,255,0.85)",
-                    transition: "color 0.3s ease",
-                  }}
-                >
-                  {isSelected ? (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M2 7.5l3.2 3.2L12 4"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  ) : (
-                    <svg width="14" height="10" viewBox="0 0 16 12" fill="none">
-                      <path
-                        d="M1 6h13M9 1l5 5-5 5"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+    <div
+      aria-hidden={!isActive}
+      style={{
+        position: "absolute",
+        left: `${anchor.x}vw`,
+        top: `${anchor.y}vh`,
+        transform: `translate(${tx}, ${ty}) translateX(${slide}px)`,
+        opacity: isActive ? 1 : 0,
+        pointerEvents: isActive ? "auto" : "none",
+        transition: `opacity 0.55s ${EASE}, transform 0.7s ${EASE}`,
+        maxWidth: "min(92vw, 540px)",
+        width: anchor.align === "center" ? "min(92vw, 540px)" : "auto",
+      }}
+    >
+      {children}
     </div>
   );
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Steps 2 & 3 — Pill selectors
+   Step 0 — project kind
    ────────────────────────────────────────────────────────────────────────── */
-function StepPills({
+function ProjectStep({
   revealKey,
-  eyebrow,
-  title,
-  subtitle,
-  options,
   selected,
   onSelect,
 }: {
   revealKey: number;
-  eyebrow: string;
-  title: string;
-  subtitle: string;
-  options: Pill[];
   selected: string | null;
   onSelect: (id: string) => void;
 }) {
   return (
-    <div style={{ padding: "40px 44px 32px", height: "100%", display: "flex", flexDirection: "column" }}>
-      <Eyebrow text={eyebrow} />
-      <Headline key={revealKey} text={title} />
-      <Subtitle text={subtitle} />
-
-      <div
-        style={{
-          marginTop: 40,
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: 14,
-        }}
-      >
-        {options.map((o, i) => (
-          <OptionCard
-            key={o.id}
-            index={i}
-            num={String(i + 1).padStart(2, "0")}
-            label={o.label}
-            selected={selected === o.id}
-            onClick={() => onSelect(o.id)}
-          />
-        ))}
-      </div>
+    <div key={revealKey} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+      <Question text="Was haben Sie vor?" />
+      <OptionList
+        options={PROJECT_KINDS}
+        selected={selected}
+        onSelect={onSelect}
+        align="left"
+        startDelay={0.45}
+      />
     </div>
   );
 }
 
-function OptionCard({
-  index,
-  num,
-  label,
+/* ──────────────────────────────────────────────────────────────────────────
+   Steps 1 & 2 — pills (compact text rows, optionally right-aligned)
+   ────────────────────────────────────────────────────────────────────────── */
+function PillStep({
+  revealKey,
+  title,
+  options,
   selected,
+  onSelect,
+  align,
+}: {
+  revealKey: number;
+  title: string;
+  options: Pill[];
+  selected: string | null;
+  onSelect: (id: string) => void;
+  align: "left" | "right";
+}) {
+  return (
+    <div
+      key={revealKey}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 28,
+        alignItems: align === "right" ? "flex-end" : "flex-start",
+        textAlign: align,
+      }}
+    >
+      <Question text={title} align={align} />
+      <OptionList
+        options={options}
+        selected={selected}
+        onSelect={onSelect}
+        align={align}
+        startDelay={0.4}
+      />
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Question — fills grey → ink
+   ────────────────────────────────────────────────────────────────────────── */
+function Question({
+  text,
+  align = "left",
+}: {
+  text: string;
+  align?: "left" | "right" | "center";
+}) {
+  return (
+    <h2
+      style={{
+        fontSize: "clamp(38px, 4.8vw, 60px)",
+        fontWeight: 300,
+        letterSpacing: "-0.035em",
+        lineHeight: 1.02,
+        margin: 0,
+        textAlign: align,
+        color: GHOST, // serves as background so spaces and partial reveals look consistent
+      }}
+    >
+      <FillReveal text={text} delay={0.05} charMs={28} duration={0.5} />
+    </h2>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Compact option list — text rows that fill in, hover reveals indicator
+   ────────────────────────────────────────────────────────────────────────── */
+function OptionList({
+  options,
+  selected,
+  onSelect,
+  align,
+  startDelay,
+}: {
+  options: Pill[];
+  selected: string | null;
+  onSelect: (id: string) => void;
+  align: "left" | "right";
+  startDelay: number;
+}) {
+  return (
+    <ul
+      style={{
+        listStyle: "none",
+        padding: 0,
+        margin: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        alignItems: align === "right" ? "flex-end" : "flex-start",
+      }}
+    >
+      {options.map((o, i) => {
+        const isSelected = selected === o.id;
+        const isDimmed = selected !== null && !isSelected;
+        return (
+          <li
+            key={o.id}
+            style={{
+              animation: `cfRise 0.6s ${EASE} both`,
+              animationDelay: `${startDelay + i * 0.07}s`,
+            }}
+          >
+            <OptionPill
+              label={o.label}
+              isSelected={isSelected}
+              isDimmed={isDimmed}
+              fillDelay={startDelay + i * 0.07 + 0.08}
+              onClick={() => onSelect(o.id)}
+            />
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/* Glass pill — frosted translucent surface over the milky backdrop */
+function OptionPill({
+  label,
+  isSelected,
+  isDimmed,
+  fillDelay,
   onClick,
 }: {
-  index: number;
-  num: string;
   label: string;
-  selected: boolean;
+  isSelected: boolean;
+  isDimmed: boolean;
+  fillDelay: number;
   onClick: () => void;
 }) {
   const [hover, setHover] = useState(false);
+
+  const surfaceBase = "rgba(255,255,255,0.32)";
+  const surfaceHover = "rgba(255,255,255,0.5)";
+  const surfaceSelected = "rgba(155,146,106,0.22)";
+  const borderBase = "rgba(255,255,255,0.55)";
+  const borderHover = "rgba(255,255,255,0.75)";
+  const borderSelected = "rgba(155,146,106,0.55)";
+
+  const bg = isSelected ? surfaceSelected : hover ? surfaceHover : surfaceBase;
+  const border = isSelected ? borderSelected : hover ? borderHover : borderBase;
+
   return (
     <button
       type="button"
@@ -865,99 +785,55 @@ function OptionCard({
       onMouseLeave={() => setHover(false)}
       style={{
         position: "relative",
-        textAlign: "left",
-        padding: "26px 28px 24px",
-        borderRadius: 4,
-        border: `1px solid ${selected ? "rgba(155,146,106,0.6)" : HAIR}`,
-        background: selected ? "rgba(155,146,106,0.10)" : "transparent",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 14,
+        padding: "14px 26px 14px 30px",
+        borderRadius: 999,
+        border: `1px solid ${border}`,
+        background: bg,
         color: INK,
         fontFamily: "inherit",
+        fontSize: "clamp(17px, 1.6vw, 21px)",
+        fontWeight: 300,
+        letterSpacing: "-0.02em",
+        lineHeight: 1,
         cursor: "pointer",
-        overflow: "hidden",
-        transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}`,
-        animation: `cfRiseIn 0.7s ${EASE} both`,
-        animationDelay: `${0.18 + index * 0.07}s`,
+        backdropFilter: "blur(22px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(12,11,7,0.05), 0 10px 28px rgba(12,11,7,0.08)",
+        opacity: isDimmed ? 0.4 : 1,
+        transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, opacity 0.4s ${EASE}, transform 0.45s ${POP}, box-shadow 0.4s ${EASE}`,
+        transform: `translateY(${isSelected ? -2 : hover ? -1 : 0}px)`,
       }}
     >
-      {/* Tan accent bar — slides in from top when selected */}
+      <span style={{ display: "inline-block" }}>
+        <FillReveal text={label} delay={fillDelay} charMs={22} duration={0.45} />
+      </span>
       <span
         aria-hidden
         style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 2,
-          background: TAN,
-          transformOrigin: "top",
-          transform: `scaleY(${selected ? 1 : 0})`,
-          transition: `transform 0.55s ${POP}`,
-        }}
-      />
-
-      {/* Number + dash eyebrow */}
-      <div
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 10,
-          fontSize: 10,
-          letterSpacing: "0.24em",
-          textTransform: "uppercase",
-          color: selected ? TAN : MUTED,
-          fontVariantNumeric: "tabular-nums",
-          marginBottom: 18,
-          transition: "color 0.3s ease",
-        }}
-      >
-        <span>{num}</span>
-        <span
-          aria-hidden
-          style={{
-            width: hover || selected ? 22 : 14,
-            height: 1,
-            background: selected ? TAN : "rgba(12,11,7,0.3)",
-            display: "inline-block",
-            transition: `width 0.45s ${POP}, background 0.3s ease`,
-          }}
-        />
-      </div>
-
-      {/* Label */}
-      <div
-        style={{
-          fontSize: "clamp(20px, 1.7vw, 24px)",
-          fontWeight: 300,
-          color: INK,
-          letterSpacing: "-0.025em",
-          lineHeight: 1.1,
-        }}
-      >
-        {label}
-      </div>
-
-      {/* Bottom-right: arrow → check on select. */}
-      <span
-        aria-hidden
-        style={{
-          position: "absolute",
-          right: 22,
-          bottom: 22,
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          width: 26,
-          height: 26,
-          opacity: hover || selected ? 1 : 0.25,
-          transform: `translateX(${hover && !selected ? 3 : 0}px)`,
-          transition: `opacity 0.3s ease, transform 0.35s ${POP}`,
-          color: selected ? TAN : INK,
+          width: 18,
+          height: 18,
+          borderRadius: "50%",
+          background: isSelected ? TAN : "transparent",
+          border: isSelected
+            ? `1px solid ${TAN}`
+            : "1px solid rgba(12,11,7,0.25)",
+          color: isSelected ? "#fff" : INK,
+          opacity: hover || isSelected ? 1 : 0.55,
+          transition: `background 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.4s ${POP}`,
+          transform: `scale(${hover && !isSelected ? 1.08 : 1})`,
         }}
       >
-        {selected ? (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        {isSelected ? (
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path
-              d="M2 7.5l3.2 3.2L12 4"
+              d="M1.6 5.2L4 7.6 8.4 2.6"
               stroke="currentColor"
               strokeWidth="1.4"
               strokeLinecap="round"
@@ -965,9 +841,9 @@ function OptionCard({
             />
           </svg>
         ) : (
-          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
             <path
-              d="M1 6h13M9 1l5 5-5 5"
+              d="M1 4h7M5.5 1L8.5 4l-3 3"
               stroke="currentColor"
               strokeWidth="1.2"
               strokeLinecap="round"
@@ -981,9 +857,9 @@ function OptionCard({
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Step 4 — Contact form
+   Step 3 — contact form (compact)
    ────────────────────────────────────────────────────────────────────────── */
-function StepContact({
+function ContactStep({
   revealKey,
   name,
   email,
@@ -994,6 +870,7 @@ function StepContact({
   onPhone,
   onMessage,
   onSubmit,
+  canSubmit,
 }: {
   revealKey: number;
   name: string;
@@ -1005,44 +882,62 @@ function StepContact({
   onPhone: (v: string) => void;
   onMessage: (v: string) => void;
   onSubmit: () => void;
+  canSubmit: boolean;
 }) {
   return (
-    <div style={{ padding: "40px 44px 32px", height: "100%", display: "flex", flexDirection: "column" }}>
-      <Eyebrow text="04 / Kontakt" />
-      <Headline key={revealKey} text="Wie erreichen wir Sie?" />
-      <Subtitle text="Wir melden uns persönlich innerhalb eines Werktags." />
-
+    <div
+      key={revealKey}
+      style={{ display: "flex", flexDirection: "column", gap: 28 }}
+    >
+      <Question text="Wie erreichen wir Sie?" align="center" />
       <form
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit();
         }}
         style={{
-          marginTop: 28,
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "20px 24px",
+          gap: "18px 22px",
+          marginTop: 6,
         }}
       >
-        <Field label="Name" value={name} onChange={onName} delay={0.15} required />
+        <Field label="Name" value={name} onChange={onName} delay={0.35} required />
         <Field
           label="E-Mail"
           value={email}
           onChange={onEmail}
-          delay={0.21}
+          delay={0.42}
           type="email"
           required
         />
-        <Field label="Telefon (optional)" value={phone} onChange={onPhone} delay={0.27} />
-        <div />
         <div style={{ gridColumn: "1 / -1" }}>
           <Field
-            label="Nachricht (optional)"
+            label="Telefon (optional)"
+            value={phone}
+            onChange={onPhone}
+            delay={0.49}
+          />
+        </div>
+        <div style={{ gridColumn: "1 / -1" }}>
+          <Field
+            label="Worum geht es? (optional)"
             value={message}
             onChange={onMessage}
-            delay={0.33}
+            delay={0.56}
             multiline
           />
+        </div>
+        <div
+          style={{
+            gridColumn: "1 / -1",
+            display: "flex",
+            justifyContent: "center",
+            marginTop: 6,
+            animation: `cfRise 0.7s ${EASE} 0.7s both`,
+          }}
+        >
+          <SubmitButton disabled={!canSubmit} />
         </div>
       </form>
     </div>
@@ -1074,8 +969,8 @@ function Field({
     width: "100%",
     border: "none",
     background: "transparent",
-    padding: "28px 2px 10px",
-    fontSize: 19,
+    padding: "26px 2px 8px",
+    fontSize: 18,
     fontFamily: "inherit",
     fontWeight: 300,
     color: INK,
@@ -1090,7 +985,7 @@ function Field({
         display: "block",
         borderBottom: `1px solid ${focused ? TAN : "rgba(12,11,7,0.2)"}`,
         transition: "border-color 0.3s ease",
-        animation: `cfRiseIn 0.6s ${EASE} both`,
+        animation: `cfRise 0.6s ${EASE} both`,
         animationDelay: `${delay}s`,
       }}
     >
@@ -1098,12 +993,12 @@ function Field({
         style={{
           position: "absolute",
           left: 2,
-          top: lifted ? 4 : 28,
-          fontSize: lifted ? 10 : 17,
+          top: lifted ? 4 : 26,
+          fontSize: lifted ? 10 : 16,
           fontWeight: 300,
           letterSpacing: lifted ? "0.22em" : "-0.015em",
           textTransform: lifted ? "uppercase" : "none",
-          color: lifted ? TAN : "rgba(12,11,7,0.42)",
+          color: lifted ? TAN : "rgba(12,11,7,0.4)",
           transition: `top 0.4s ${POP}, font-size 0.4s ${POP}, color 0.3s ease, letter-spacing 0.4s ${POP}`,
           pointerEvents: "none",
         }}
@@ -1119,7 +1014,7 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          style={{ ...sharedInput, resize: "none", minHeight: 56 }}
+          style={{ ...sharedInput, resize: "none", minHeight: 52 }}
         />
       ) : (
         <input
@@ -1136,39 +1031,32 @@ function Field({
   );
 }
 
-function SubmitButton({
-  disabled,
-  onClick,
-}: {
-  disabled: boolean;
-  onClick: () => void;
-}) {
+function SubmitButton({ disabled }: { disabled: boolean }) {
   return (
     <button
-      type="button"
-      onClick={onClick}
+      type="submit"
       disabled={disabled}
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 10,
-        padding: "12px 22px",
+        gap: 12,
+        padding: "13px 24px",
         border: "none",
-        background: disabled ? "rgba(12,11,7,0.15)" : INK,
+        background: disabled ? "rgba(12,11,7,0.18)" : INK,
         color: disabled ? "rgba(12,11,7,0.5)" : "#fff",
         borderRadius: 999,
         fontFamily: "inherit",
         fontSize: 12,
         fontWeight: 400,
-        letterSpacing: "0.1em",
+        letterSpacing: "0.12em",
         textTransform: "uppercase",
         cursor: disabled ? "not-allowed" : "pointer",
         transition: `background 0.3s ease, color 0.3s ease, transform 0.3s ${EASE}`,
-        boxShadow: disabled ? "none" : "0 6px 18px rgba(25,23,14,0.18)",
+        boxShadow: disabled ? "none" : "0 8px 22px rgba(12,11,7,0.22)",
       }}
       onMouseEnter={(e) => {
         if (!disabled)
-          (e.currentTarget as HTMLElement).style.transform = "translateX(2px)";
+          (e.currentTarget as HTMLElement).style.transform = "translateX(3px)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLElement).style.transform = "translateX(0)";
@@ -1189,9 +1077,9 @@ function SubmitButton({
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Step 5 — Thank you
+   Step 4 — thanks
    ────────────────────────────────────────────────────────────────────────── */
-function StepThanks({
+function ThanksStep({
   revealKey,
   name,
   onClose,
@@ -1205,68 +1093,55 @@ function StepThanks({
     <div
       key={revealKey}
       style={{
-        padding: "40px 44px 32px",
-        height: "100%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
         textAlign: "center",
+        gap: 22,
       }}
     >
-      {/* Animated check */}
       <div
         style={{
-          width: 88,
-          height: 88,
+          width: 78,
+          height: 78,
           borderRadius: "50%",
           border: `1.5px solid ${TAN}`,
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          marginBottom: 28,
           animation: `cfRing 0.9s ${POP} both`,
         }}
       >
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
           <path
             d="M9 18.5l6 6L27 12.5"
             stroke={INK}
-            strokeWidth="1.8"
+            strokeWidth="1.6"
             strokeLinecap="round"
             strokeLinejoin="round"
             style={{
               strokeDasharray: 60,
               strokeDashoffset: 60,
-              animation: `cfCheck 0.7s ${POP} 0.35s forwards`,
+              animation: `cfCheck 0.7s ${POP} 0.4s forwards`,
             }}
           />
         </svg>
       </div>
 
-      <div
-        style={{
-          fontSize: "clamp(40px, 5.4vw, 64px)",
-          fontWeight: 300,
-          color: INK,
-          letterSpacing: "-0.035em",
-          lineHeight: 1.02,
-          marginBottom: 16,
-          overflow: "hidden",
-        }}
-      >
-        <SplitHeading text={firstName ? `Danke, ${firstName}.` : "Danke."} />
-      </div>
+      <Question
+        text={firstName ? `Danke, ${firstName}.` : "Danke."}
+        align="center"
+      />
       <p
         style={{
-          fontSize: 16,
+          fontSize: 15,
           fontWeight: 300,
           color: MUTED,
-          maxWidth: 480,
+          maxWidth: 420,
           lineHeight: 1.5,
           letterSpacing: "-0.01em",
-          marginBottom: 36,
-          animation: `cfRiseIn 0.7s ${EASE} 0.5s both`,
+          margin: 0,
+          animation: `cfRise 0.7s ${EASE} 0.55s both`,
         }}
       >
         Ihre Anfrage liegt bei uns. Wir melden uns persönlich innerhalb eines
@@ -1277,7 +1152,8 @@ function StepThanks({
         type="button"
         onClick={onClose}
         style={{
-          padding: "12px 22px",
+          marginTop: 8,
+          padding: "11px 22px",
           border: "none",
           background: INK,
           color: "#fff",
@@ -1285,11 +1161,11 @@ function StepThanks({
           fontFamily: "inherit",
           fontSize: 12,
           fontWeight: 400,
-          letterSpacing: "0.1em",
+          letterSpacing: "0.12em",
           textTransform: "uppercase",
           cursor: "pointer",
-          animation: `cfRiseIn 0.7s ${EASE} 0.65s both`,
-          transition: `background 0.3s ease`,
+          animation: `cfRise 0.7s ${EASE} 0.75s both`,
+          transition: "background 0.3s ease",
         }}
         onMouseEnter={(e) =>
           ((e.currentTarget as HTMLElement).style.background = "#1f1d14")
@@ -1301,78 +1177,5 @@ function StepThanks({
         Schließen
       </button>
     </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Shared step typography
-   ────────────────────────────────────────────────────────────────────────── */
-function Eyebrow({ text }: { text: string }) {
-  // Split "02 / Zeitrahmen" so the numeral can be styled separately
-  const [num, ...rest] = text.split(" / ");
-  const label = rest.join(" / ");
-  return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 10,
-        fontSize: 11,
-        letterSpacing: "0.22em",
-        textTransform: "uppercase",
-        color: TAN,
-        marginBottom: 18,
-        fontWeight: 400,
-      }}
-    >
-      <span style={{ fontVariantNumeric: "tabular-nums" }}>{num}</span>
-      <span
-        aria-hidden
-        style={{
-          width: 18,
-          height: 1,
-          background: TAN,
-          opacity: 0.6,
-          display: "inline-block",
-        }}
-      />
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function Headline({ text }: { text: string }) {
-  return (
-    <h2
-      style={{
-        fontSize: "clamp(36px, 4.6vw, 56px)",
-        fontWeight: 300,
-        color: INK,
-        letterSpacing: "-0.035em",
-        lineHeight: 1.02,
-        marginBottom: 12,
-        overflow: "hidden",
-      }}
-    >
-      <SplitHeading text={text} />
-    </h2>
-  );
-}
-
-function Subtitle({ text }: { text: string }) {
-  return (
-    <p
-      style={{
-        fontSize: 15,
-        fontWeight: 300,
-        color: MUTED,
-        maxWidth: 540,
-        lineHeight: 1.5,
-        letterSpacing: "-0.005em",
-        animation: `cfRiseIn 0.7s ${EASE} 0.25s both`,
-      }}
-    >
-      {text}
-    </p>
   );
 }
