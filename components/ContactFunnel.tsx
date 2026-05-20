@@ -422,14 +422,14 @@ export default function ContactFunnel() {
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   filter: isThanks
-                    ? "blur(16px) saturate(1.4)"
+                    ? "blur(8px) saturate(1.45)"
                     : revealing
                     ? "blur(20px) saturate(1.35)"
                     : isPreviewHover
                     ? "blur(24px) saturate(1.3)"
                     : "blur(32px) saturate(1.22)",
                   transform: `scale(${
-                    isThanks ? 1.03 : revealing ? 1.05 : isPreviewHover ? 1.08 : 1.12
+                    isThanks ? 1.02 : revealing ? 1.05 : isPreviewHover ? 1.08 : 1.12
                   })`,
                   opacity: isActiveImage ? 1 : 0,
                   transition: `opacity 0.9s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
@@ -463,21 +463,21 @@ export default function ContactFunnel() {
               position: "absolute",
               inset: 0,
               background: isThanks
-                ? "linear-gradient(180deg, rgba(245,243,238,0.14) 0%, rgba(235,232,226,0.12) 50%, rgba(245,243,238,0.18) 100%)"
+                ? "linear-gradient(180deg, rgba(245,243,238,0.06) 0%, rgba(235,232,226,0.04) 50%, rgba(245,243,238,0.08) 100%)"
                 : revealing
                 ? "linear-gradient(180deg, rgba(245,243,238,0.14) 0%, rgba(235,232,226,0.12) 50%, rgba(245,243,238,0.18) 100%)"
                 : previewImage
                 ? "linear-gradient(180deg, rgba(245,243,238,0.2) 0%, rgba(235,232,226,0.18) 50%, rgba(245,243,238,0.24) 100%)"
                 : "linear-gradient(180deg, rgba(245,243,238,0.28) 0%, rgba(235,232,226,0.25) 50%, rgba(245,243,238,0.32) 100%)",
               backdropFilter: isThanks
-                ? "blur(2px) saturate(1.1)"
+                ? "blur(1px) saturate(1.15)"
                 : revealing
                 ? "blur(2px) saturate(1.1)"
                 : previewImage
                 ? "blur(3px) saturate(1.12)"
                 : "blur(4px) saturate(1.15)",
               WebkitBackdropFilter: isThanks
-                ? "blur(2px) saturate(1.1)"
+                ? "blur(1px) saturate(1.15)"
                 : revealing
                 ? "blur(2px) saturate(1.1)"
                 : previewImage
