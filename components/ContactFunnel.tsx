@@ -37,6 +37,9 @@ const TIMELINES: Pill[] = [
    all stacked, only the active one opaque. */
 const ALL_IMAGES = Array.from(
   new Set([
+    "/images/proj-02.jpg",
+    "/images/proj-04.jpg",
+    "/images/proj-07.jpg",
     ...PROJECT_KINDS.map((p) => p.image),
     ...TIMELINES.map((t) => t.image),
   ])
@@ -47,16 +50,28 @@ type Anchor = { x: number; y: number; align: "left" | "right" | "center"; vAlign
 const STEP_ANCHORS: Anchor[] = [
   { x: 10, y: 50, align: "left",   vAlign: "center" }, // 0 project
   { x: 90, y: 56, align: "right",  vAlign: "center" }, // 1 timeline
-  { x: 50, y: 50, align: "center", vAlign: "center" }, // 2 contact
+  { x: 12, y: 54, align: "left",   vAlign: "center" }, // 2 contact (off-centre)
   { x: 50, y: 50, align: "center", vAlign: "center" }, // 3 thanks
 ];
 
-/* Per-step base color shown when no option is hovered or selected. */
+/* Per-step base color — used as a soft tint laid over the backdrop
+   image, so each step keeps its colour mood while the photo shows
+   through. */
 const STEP_COLORS = [
   "#6e8a6e", // 0 — sage green
   "#6f9ec0", // 1 — sky blue
   "#8e424d", // 2 — burgundy
   "#ebe8e2", // 3 — cream (thanks)
+];
+
+/* Default backdrop image per step — always visible behind the milky
+   wash so the funnel never feels like a flat colour panel. Hovering
+   an option swaps to that option's image; on the thanks step the
+   user's chosen project image takes over. */
+const STEP_DEFAULT_IMAGES = [
+  "/images/proj-02.jpg", // 0 — terrace (greens + stone)
+  "/images/proj-04.jpg", // 1 — pool (blues)
+  "/images/proj-07.jpg", // 2 — stone (warm gold)
 ];
 
 const TOTAL_STEPS = 4;
@@ -158,7 +173,15 @@ export default function ContactFunnel() {
 
   const projectImage = PROJECT_KINDS.find((p) => p.id === project)?.image;
   const isThanks = step === 3;
-  const effectivePreview = previewImage ?? (isThanks ? projectImage ?? null : null);
+  /* What image is "active" at this moment — hover preview wins,
+     otherwise the thanks step shows the user's project, otherwise
+     each step has a default scenic backdrop. */
+  const defaultStepImage = STEP_DEFAULT_IMAGES[step];
+  const effectivePreview =
+    previewImage ??
+    (isThanks ? projectImage ?? null : null) ??
+    defaultStepImage ??
+    null;
 
   /* CTA reveal — wait out the hero intro on the home page; show
      promptly on every other route. */
@@ -374,74 +397,92 @@ export default function ContactFunnel() {
             transition: `opacity 0.6s ${EASE}`,
           }}
         >
-          {/* Base — solid step color, fades on step change */}
+          {/* Cream fallback so the modal never goes black before the
+              backdrop image paints in. */}
+          <div
+            aria-hidden
+            style={{ position: "absolute", inset: 0, background: "#ebe8e2" }}
+          />
+
+          {/* Image layers — every step now has a default backdrop
+              image; hovering an option swaps it; committing an option
+              briefly intensifies it; the thanks step uses the user's
+              own project. */}
+          {ALL_IMAGES.map((src) => {
+            const isActiveImage = effectivePreview === src;
+            const isPreviewHover = previewImage === src;
+            return (
+              <div
+                key={src}
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  inset: -80,
+                  backgroundImage: `url(${src})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  filter: isThanks
+                    ? "blur(22px) saturate(1.35)"
+                    : revealing
+                    ? "blur(28px) saturate(1.3)"
+                    : isPreviewHover
+                    ? "blur(34px) saturate(1.25)"
+                    : "blur(44px) saturate(1.18)",
+                  transform: `scale(${
+                    isThanks ? 1.04 : revealing ? 1.06 : isPreviewHover ? 1.1 : 1.14
+                  })`,
+                  opacity: isActiveImage ? 1 : 0,
+                  transition: `opacity 0.9s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
+                }}
+              />
+            );
+          })}
+
+          {/* Soft step-color tint laid over the image — keeps the
+              sage / sky / burgundy mood while the photo shows through. */}
           <div
             aria-hidden
             style={{
               position: "absolute",
               inset: 0,
               background: stepColor,
-              transition: `background 0.8s ${EASE}`,
+              mixBlendMode: "soft-light",
+              opacity: isThanks ? 0 : revealing ? 0.35 : previewImage ? 0.45 : 0.6,
+              transition: `opacity 0.6s ${EASE}, background 0.8s ${EASE}`,
+              pointerEvents: "none",
             }}
           />
 
-          {/* Image layers — only become visible while previewing an
-              option, while committing one, or while sitting on the
-              thanks step (where the user's chosen project image is
-              the celebratory backdrop and we want it clearly seen). */}
-          {ALL_IMAGES.map((src) => (
-            <div
-              key={src}
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: -80,
-                backgroundImage: `url(${src})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                filter: isThanks
-                  ? "blur(22px) saturate(1.35)"
-                  : revealing
-                  ? "blur(30px) saturate(1.3)"
-                  : "blur(52px) saturate(1.2)",
-                transform: `scale(${isThanks ? 1.04 : revealing ? 1.06 : 1.16})`,
-                opacity: effectivePreview === src ? 1 : 0,
-                transition: `opacity 0.9s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
-              }}
-            />
-          ))}
-
-          {/* Milky wash — full enough to keep things soft, but thinner
-              than before so the color reads more. Thins further on
-              hover so the image comes through clearly. On the thanks
-              step we lift it so the chosen project image is clearly
-              visible behind the glass card. */}
+          {/* Milky wash — keeps the photo "seen through milky glass".
+              Slightly heavier at rest so the image reads as atmosphere
+              not photography; thins on hover and on the thanks step
+              so the selected image reads more clearly. */}
           <div
             aria-hidden
             style={{
               position: "absolute",
               inset: 0,
               background: isThanks
-                ? "linear-gradient(180deg, rgba(245,243,238,0.22) 0%, rgba(235,232,226,0.18) 50%, rgba(245,243,238,0.26) 100%)"
+                ? "linear-gradient(180deg, rgba(245,243,238,0.2) 0%, rgba(235,232,226,0.18) 50%, rgba(245,243,238,0.24) 100%)"
                 : revealing
-                ? "linear-gradient(180deg, rgba(245,243,238,0.24) 0%, rgba(235,232,226,0.2) 50%, rgba(245,243,238,0.28) 100%)"
-                : effectivePreview
-                ? "linear-gradient(180deg, rgba(245,243,238,0.32) 0%, rgba(235,232,226,0.28) 50%, rgba(245,243,238,0.36) 100%)"
-                : "linear-gradient(180deg, rgba(245,243,238,0.4) 0%, rgba(235,232,226,0.36) 50%, rgba(245,243,238,0.44) 100%)",
+                ? "linear-gradient(180deg, rgba(245,243,238,0.22) 0%, rgba(235,232,226,0.18) 50%, rgba(245,243,238,0.26) 100%)"
+                : previewImage
+                ? "linear-gradient(180deg, rgba(245,243,238,0.3) 0%, rgba(235,232,226,0.26) 50%, rgba(245,243,238,0.34) 100%)"
+                : "linear-gradient(180deg, rgba(245,243,238,0.38) 0%, rgba(235,232,226,0.34) 50%, rgba(245,243,238,0.42) 100%)",
               backdropFilter: isThanks
                 ? "blur(2px) saturate(1.05)"
                 : revealing
                 ? "blur(3px) saturate(1.05)"
-                : effectivePreview
+                : previewImage
                 ? "blur(4px) saturate(1.1)"
-                : "blur(7px) saturate(1.15)",
+                : "blur(6px) saturate(1.15)",
               WebkitBackdropFilter: isThanks
                 ? "blur(2px) saturate(1.05)"
                 : revealing
                 ? "blur(3px) saturate(1.05)"
-                : effectivePreview
+                : previewImage
                 ? "blur(4px) saturate(1.1)"
-                : "blur(7px) saturate(1.15)",
+                : "blur(6px) saturate(1.15)",
               transition: `background 0.6s ${EASE}, backdrop-filter 0.6s ${EASE}, -webkit-backdrop-filter 0.6s ${EASE}`,
             }}
           />
@@ -453,7 +494,7 @@ export default function ContactFunnel() {
               position: "absolute",
               inset: 0,
               backgroundImage: "url(/tile-bg.svg)",
-              opacity: revealing ? 0.06 : effectivePreview ? 0.1 : 0.16,
+              opacity: revealing ? 0.05 : previewImage ? 0.08 : 0.12,
               mixBlendMode: "multiply",
               pointerEvents: "none",
               transition: `opacity 0.6s ${EASE}`,
@@ -745,15 +786,15 @@ function GlassCard({
         gap,
         padding: "36px clamp(28px, 4vw, 48px) 34px",
         borderRadius: 30,
-        background: "rgba(255,255,255,0.34)",
+        background: "rgba(255,255,255,0.18)",
         border: "1.5px solid rgba(255,255,255,0.85)",
-        backdropFilter: "blur(28px) saturate(1.7)",
-        WebkitBackdropFilter: "blur(28px) saturate(1.7)",
+        backdropFilter: "blur(30px) saturate(1.8)",
+        WebkitBackdropFilter: "blur(30px) saturate(1.8)",
         boxShadow: [
           "inset 0 2px 0 rgba(255,255,255,0.95)",
           "inset 0 -1.5px 0 rgba(12,11,7,0.08)",
-          "0 0 0 1px rgba(255,255,255,0.25)",
-          "0 36px 72px rgba(12,11,7,0.22)",
+          "0 0 0 1px rgba(255,255,255,0.3)",
+          "0 36px 72px rgba(12,11,7,0.24)",
         ].join(", "),
         alignItems:
           align === "right" ? "flex-end" : align === "left" ? "flex-start" : "stretch",
@@ -1157,17 +1198,21 @@ function Field({
   const hasValue = value.length > 0;
   const lifted = focused || hasValue;
 
+  /* Each field is its own glass pill — the typed text sits on glass
+     and picks up the inset highlight as a subtle reflection. */
   const sharedInput: React.CSSProperties = {
     width: "100%",
     border: "none",
     background: "transparent",
-    padding: "26px 2px 8px",
-    fontSize: 18,
+    padding: 0,
+    margin: 0,
+    fontSize: 17,
     fontFamily: "inherit",
     fontWeight: 300,
     color: INK,
     outline: "none",
     letterSpacing: "-0.02em",
+    textShadow: "0 1px 0 rgba(255,255,255,0.55)",
   };
 
   return (
@@ -1175,8 +1220,20 @@ function Field({
       style={{
         position: "relative",
         display: "block",
-        borderBottom: `1px solid ${focused ? TAN : "rgba(12,11,7,0.2)"}`,
-        transition: "border-color 0.3s ease",
+        padding: multiline ? "22px 18px 14px" : "20px 18px 12px",
+        borderRadius: 14,
+        background: focused
+          ? "rgba(255,255,255,0.42)"
+          : "rgba(255,255,255,0.22)",
+        border: `1px solid ${
+          focused ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.7)"
+        }`,
+        backdropFilter: "blur(18px) saturate(1.7)",
+        WebkitBackdropFilter: "blur(18px) saturate(1.7)",
+        boxShadow: focused
+          ? "inset 0 1.5px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(12,11,7,0.05), 0 10px 22px rgba(12,11,7,0.1)"
+          : "inset 0 1.5px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(12,11,7,0.05), 0 6px 14px rgba(12,11,7,0.06)",
+        transition: `background 0.3s ${EASE}, border-color 0.3s ${EASE}, box-shadow 0.3s ${EASE}`,
         animation: `cfRise 0.6s ${EASE} both`,
         animationDelay: `${delay}s`,
       }}
@@ -1184,13 +1241,14 @@ function Field({
       <span
         style={{
           position: "absolute",
-          left: 2,
-          top: lifted ? 4 : 26,
-          fontSize: lifted ? 10 : 16,
+          left: 18,
+          top: lifted ? 6 : multiline ? 22 : 20,
+          fontSize: lifted ? 9 : 15,
           fontWeight: 300,
           letterSpacing: lifted ? "0.22em" : "-0.015em",
           textTransform: lifted ? "uppercase" : "none",
-          color: lifted ? TAN : "rgba(12,11,7,0.4)",
+          color: lifted ? TAN : "rgba(12,11,7,0.5)",
+          textShadow: "0 1px 0 rgba(255,255,255,0.55)",
           transition: `top 0.4s ${POP}, font-size 0.4s ${POP}, color 0.3s ease, letter-spacing 0.4s ${POP}`,
           pointerEvents: "none",
         }}
@@ -1198,27 +1256,29 @@ function Field({
         {label}
         {required && <span aria-hidden style={{ color: TAN }}> *</span>}
       </span>
-      {multiline ? (
-        <textarea
-          rows={2}
-          required={required}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          style={{ ...sharedInput, resize: "none", minHeight: 52 }}
-        />
-      ) : (
-        <input
-          required={required}
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          style={sharedInput}
-        />
-      )}
+      <div style={{ marginTop: lifted ? 14 : 4 }}>
+        {multiline ? (
+          <textarea
+            rows={2}
+            required={required}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={{ ...sharedInput, resize: "none", minHeight: 44 }}
+          />
+        ) : (
+          <input
+            required={required}
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={sharedInput}
+          />
+        )}
+      </div>
     </label>
   );
 }
