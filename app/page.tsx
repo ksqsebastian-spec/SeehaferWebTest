@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import ContactFunnel from "@/components/ContactFunnel";
 
 export default function Home() {
   return (
@@ -9,7 +8,6 @@ export default function Home() {
       <main>
         <Hero />
       </main>
-      <ContactFunnel />
     </>
   );
 }

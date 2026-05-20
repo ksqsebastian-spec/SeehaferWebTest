@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Tokens
@@ -159,11 +160,14 @@ export default function ContactFunnel() {
   const isThanks = step === 3;
   const effectivePreview = previewImage ?? (isThanks ? projectImage ?? null : null);
 
-  /* CTA reveal after hero intro */
+  /* CTA reveal — wait out the hero intro on the home page; show
+     promptly on every other route. */
+  const pathname = usePathname();
   useEffect(() => {
-    const t = setTimeout(() => setCtaVisible(true), 2400);
+    const delay = pathname === "/" ? 2400 : 600;
+    const t = setTimeout(() => setCtaVisible(true), delay);
     return () => clearTimeout(t);
-  }, []);
+  }, [pathname]);
 
   const bumpRevealKey = (target: number) => {
     setRevealKeys((keys) => {
@@ -644,7 +648,10 @@ function StepStage({
         opacity: isActive ? 1 : 0,
         pointerEvents: isActive ? "auto" : "none",
         transition: `opacity 0.55s ${EASE}, transform 0.7s ${EASE}`,
-        width: anchor.align === "center" ? "min(92vw, 560px)" : "min(86vw, 480px)",
+        width:
+          anchor.align === "center"
+            ? "min(92vw, 600px)"
+            : "min(88vw, 520px)",
       }}
     >
       {children}
@@ -667,8 +674,8 @@ function ProjectStep({
   onHover: (image: string | null) => void;
 }) {
   return (
-    <div key={revealKey} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-      <Question text="Was haben Sie vor?" />
+    <GlassCard key={revealKey} align="left" gap={28}>
+      <Question text="Was haben Sie vor?" align="left" bare />
       <OptionList
         options={PROJECT_KINDS}
         selected={selected}
@@ -678,7 +685,7 @@ function ProjectStep({
         startDelay={0.45}
         variant="image"
       />
-    </div>
+    </GlassCard>
   );
 }
 
@@ -703,17 +710,8 @@ function PillStep({
   align: "left" | "right";
 }) {
   return (
-    <div
-      key={revealKey}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 28,
-        alignItems: align === "right" ? "flex-end" : "flex-start",
-        textAlign: align,
-      }}
-    >
-      <Question text={title} align={align} />
+    <GlassCard key={revealKey} align={align} gap={26}>
+      <Question text={title} align={align} bare />
       <OptionList
         options={options}
         selected={selected}
@@ -723,6 +721,48 @@ function PillStep({
         startDelay={0.4}
         variant="plain"
       />
+    </GlassCard>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Shared glass card — wraps each step's content
+   ────────────────────────────────────────────────────────────────────────── */
+function GlassCard({
+  children,
+  align = "center",
+  gap = 24,
+}: {
+  children: React.ReactNode;
+  align?: "left" | "right" | "center";
+  gap?: number;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap,
+        padding: "36px clamp(28px, 4vw, 48px) 34px",
+        borderRadius: 30,
+        background: "rgba(255,255,255,0.34)",
+        border: "1.5px solid rgba(255,255,255,0.85)",
+        backdropFilter: "blur(28px) saturate(1.7)",
+        WebkitBackdropFilter: "blur(28px) saturate(1.7)",
+        boxShadow: [
+          "inset 0 2px 0 rgba(255,255,255,0.95)",
+          "inset 0 -1.5px 0 rgba(12,11,7,0.08)",
+          "0 0 0 1px rgba(255,255,255,0.25)",
+          "0 36px 72px rgba(12,11,7,0.22)",
+        ].join(", "),
+        alignItems:
+          align === "right" ? "flex-end" : align === "left" ? "flex-start" : "stretch",
+        textAlign: align,
+        width: "100%",
+        animation: `cfRise 0.8s ${EASE} 0.1s both`,
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -1040,28 +1080,8 @@ function ContactStep({
   canSubmit: boolean;
 }) {
   return (
-    <div
-      key={revealKey}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "stretch",
-        gap: 22,
-        padding: "40px clamp(28px, 4vw, 52px) 36px",
-        borderRadius: 32,
-        background: "rgba(255,255,255,0.34)",
-        border: "1px solid rgba(255,255,255,0.78)",
-        backdropFilter: "blur(26px) saturate(1.7)",
-        WebkitBackdropFilter: "blur(26px) saturate(1.7)",
-        boxShadow:
-          "inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(12,11,7,0.06), 0 30px 60px rgba(12,11,7,0.22)",
-        maxWidth: "min(92vw, 600px)",
-        animation: `cfRise 0.8s ${EASE} 0.1s both`,
-      }}
-    >
-      <div style={{ textAlign: "center" }}>
-        <Question text="Wie erreichen wir Sie?" align="center" bare />
-      </div>
+    <GlassCard key={revealKey} align="center" gap={22}>
+      <Question text="Wie erreichen wir Sie?" align="center" bare />
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -1112,7 +1132,7 @@ function ContactStep({
           <SubmitButton disabled={!canSubmit} />
         </div>
       </form>
-    </div>
+    </GlassCard>
   );
 }
 
@@ -1287,35 +1307,7 @@ function ThanksStep({
   const summary = [projectLabel, timelineLabel].filter(Boolean) as string[];
 
   return (
-    <div
-      key={revealKey}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-        gap: 0,
-      }}
-    >
-      {/* Glass card containing the whole completion message */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 22,
-          padding: "44px 52px 40px",
-          borderRadius: 32,
-          background: "rgba(255,255,255,0.36)",
-          border: "1px solid rgba(255,255,255,0.78)",
-          backdropFilter: "blur(26px) saturate(1.7)",
-          WebkitBackdropFilter: "blur(26px) saturate(1.7)",
-          boxShadow:
-            "inset 0 1.5px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(12,11,7,0.06), 0 36px 72px rgba(12,11,7,0.24)",
-          maxWidth: "min(92vw, 520px)",
-          animation: `cfRise 0.8s ${EASE} 0.1s both`,
-        }}
-      >
+    <GlassCard key={revealKey} align="center" gap={22}>
         {/* Check ring */}
         <div
           style={{
@@ -1473,8 +1465,7 @@ function ThanksStep({
             />
           </svg>
         </button>
-      </div>
-    </div>
+    </GlassCard>
   );
 }
 

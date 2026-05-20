@@ -3,6 +3,7 @@ import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Cursor from "@/components/Cursor";
 import PageTransition from "@/components/PageTransition";
+import ContactFunnel from "@/components/ContactFunnel";
 
 export const metadata: Metadata = {
   title: "Seehafer Elemente | Handwerk & Naturstein",
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Cursor />
         <PageTransition />
         {children}
+        <ContactFunnel />
       </body>
     </html>
   );
