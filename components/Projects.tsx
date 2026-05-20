@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 
 interface CardDef {
   col: number;
@@ -10,22 +11,23 @@ interface CardDef {
   src: string;
   name: string;
   category: string;
+  slug: string;
 }
 
 const ROW1_CARDS: CardDef[] = [
-  { col: 1, align: "center",     w: 300, h: 450, src: "/images/proj-01.jpg", name: "Mühlenberg Bad",       category: "Badezimmer" },
-  { col: 2, align: "flex-start", w: 240, h: 160, src: "/images/proj-02.jpg", name: "Seestraße Terrasse",   category: "Außenbereich" },
-  { col: 3, align: "flex-end",   w: 240, h: 360, src: "/images/proj-03.jpg", name: "Bergkamp Bad",         category: "Badezimmer" },
-  { col: 4, align: "center",     w: 360, h: 240, src: "/images/proj-04.jpg", name: "Seeblick Pool",        category: "Pool" },
-  { col: 5, align: "flex-start", w: 300, h: 450, src: "/images/proj-05.jpg", name: "Waldstraße Küche",     category: "Küche" },
-  { col: 6, align: "flex-end",   w: 450, h: 300, src: "/images/proj-06.jpg", name: "Lindenallee Wohnen",   category: "Wohnbereich" },
-  { col: 7, align: "center",     w: 160, h: 240, src: "/images/proj-07.jpg", name: "Kalkstein Fassade",    category: "Naturstein" },
+  { col: 1, align: "center",     w: 300, h: 450, src: "/images/proj-01.jpg", name: "Mühlenberg Bad",       category: "Badezimmer",   slug: "muehlenberg-bad" },
+  { col: 2, align: "flex-start", w: 240, h: 160, src: "/images/proj-02.jpg", name: "Seestraße Terrasse",   category: "Außenbereich", slug: "seestrase-terrasse" },
+  { col: 3, align: "flex-end",   w: 240, h: 360, src: "/images/proj-03.jpg", name: "Bergkamp Bad",         category: "Badezimmer",   slug: "bergkamp-bad" },
+  { col: 4, align: "center",     w: 360, h: 240, src: "/images/proj-04.jpg", name: "Seeblick Pool",        category: "Pool",         slug: "seeblick-pool" },
+  { col: 5, align: "flex-start", w: 300, h: 450, src: "/images/proj-05.jpg", name: "Waldstraße Küche",     category: "Küche",        slug: "waldstrase-kueche" },
+  { col: 6, align: "flex-end",   w: 450, h: 300, src: "/images/proj-06.jpg", name: "Lindenallee Wohnen",   category: "Wohnbereich",  slug: "lindenallee-wohnen" },
+  { col: 7, align: "center",     w: 160, h: 240, src: "/images/proj-07.jpg", name: "Kalkstein Fassade",    category: "Naturstein",   slug: "kalkstein-fassade" },
 ];
 
 const ROW2_CARDS: CardDef[] = [
-  { col: 1, align: "flex-start", w: 280, h: 420, src: "/images/proj-08.jpg", name: "Panorama Dusche",  category: "Badezimmer" },
-  { col: 2, align: "flex-end",   w: 400, h: 267, src: "/images/proj-09.jpg", name: "Eichenweg Küche",  category: "Küche" },
-  { col: 3, align: "center",     w: 350, h: 233, src: "/images/proj-10.jpg", name: "Gartenpfad Projekt", category: "Garten" },
+  { col: 1, align: "flex-start", w: 280, h: 420, src: "/images/proj-08.jpg", name: "Panorama Dusche",  category: "Badezimmer", slug: "panorama-dusche" },
+  { col: 2, align: "flex-end",   w: 400, h: 267, src: "/images/proj-09.jpg", name: "Eichenweg Küche",  category: "Küche",      slug: "eichenweg-kueche" },
+  { col: 3, align: "center",     w: 350, h: 233, src: "/images/proj-10.jpg", name: "Eichenweg Küche",  category: "Küche",      slug: "eichenweg-kueche" },
 ];
 
 const ALL_CARDS = [...ROW1_CARDS, ...ROW2_CARDS];
@@ -53,8 +55,10 @@ export default function Projects() {
   const velY  = useRef(0);
   const prevX = useRef(0);
   const prevY = useRef(0);
+  const movedDistance = useRef(0);
+  const wasDragging = useRef(false);
 
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const imgRefs  = useRef<(HTMLImageElement | null)[]>([]);
   const rafId    = useRef<number | null>(null);
 
@@ -102,6 +106,8 @@ export default function Projects() {
     prevY.current     = e.clientY;
     velX.current      = 0;
     velY.current      = 0;
+    movedDistance.current = 0;
+    wasDragging.current = false;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     if (wrapRef.current) wrapRef.current.style.cursor = "grabbing";
   }, []);
@@ -110,6 +116,8 @@ export default function Projects() {
     if (!dragging.current) return;
     const dx = e.clientX - startPtrX.current;
     const dy = e.clientY - startPtrY.current;
+    movedDistance.current = Math.max(movedDistance.current, Math.abs(dx) + Math.abs(dy));
+    if (movedDistance.current > 6) wasDragging.current = true;
     tgtX.current = clamp(startTgtX.current + dx, -(halfW / 2), halfW / 2);
     tgtY.current = clamp(startTgtY.current + dy, -(halfH / 2), halfH / 2);
     velX.current = e.clientX - prevX.current;
@@ -122,6 +130,14 @@ export default function Projects() {
   const onPointerUp = useCallback(() => {
     dragging.current = false;
     if (wrapRef.current) wrapRef.current.style.cursor = "grab";
+  }, []);
+
+  const onClickCapture = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (wasDragging.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      wasDragging.current = false;
+    }
   }, []);
 
   const onCardEnter = useCallback((i: number) => {
@@ -145,6 +161,7 @@ export default function Projects() {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      onClickCapture={onClickCapture}
       style={{
         position:    "fixed",
         inset:       0,
@@ -224,8 +241,9 @@ export default function Projects() {
           }}
         >
           {ROW1_CARDS.map((card, i) => (
-            <div
+            <Link
               key={i}
+              href={`/projekte/${card.slug}`}
               ref={el => { cardRefs.current[i] = el; }}
               onMouseEnter={() => onCardEnter(i)}
               onMouseLeave={() => onCardLeave(i)}
@@ -242,6 +260,8 @@ export default function Projects() {
                 cursor: "pointer",
                 zIndex: 2,
                 position: "relative",
+                display: "block",
+                textDecoration: "none",
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -277,7 +297,7 @@ export default function Projects() {
                   {card.name}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -295,8 +315,9 @@ export default function Projects() {
           {ROW2_CARDS.map((card, i) => {
             const idx = ROW1_CARDS.length + i;
             return (
-              <div
+              <Link
                 key={i}
+                href={`/projekte/${card.slug}`}
                 ref={el => { cardRefs.current[idx] = el; }}
                 onMouseEnter={() => onCardEnter(idx)}
                 onMouseLeave={() => onCardLeave(idx)}
@@ -313,6 +334,8 @@ export default function Projects() {
                   cursor: "pointer",
                   zIndex: 2,
                   position: "relative",
+                  display: "block",
+                  textDecoration: "none",
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -348,7 +371,7 @@ export default function Projects() {
                     {card.name}
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

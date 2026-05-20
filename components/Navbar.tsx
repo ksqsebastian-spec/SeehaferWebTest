@@ -137,15 +137,13 @@ export default function Navbar() {
               </svg>
             </Link>
 
-            {/* Dropdown panel */}
+            {/* Dropdown panel — wrapper carries the 10px hover-bridge as padding */}
             <div
               style={{
                 position: "absolute",
-                top: "calc(100% + 10px)",
+                top: "100%",
                 left: "50%",
-                background: "#35311f",
-                borderRadius: 14,
-                padding: "8px",
+                paddingTop: 10,
                 minWidth: 200,
                 opacity: dropdownOpen ? 1 : 0,
                 pointerEvents: dropdownOpen ? "auto" : "none",
@@ -153,6 +151,13 @@ export default function Navbar() {
                   ? "translateX(-50%) translateY(0px)"
                   : "translateX(-50%) translateY(-6px)",
                 transition: "opacity 0.22s ease, transform 0.22s cubic-bezier(0.85, 0.09, 0.15, 0.91)",
+              }}
+            >
+            <div
+              style={{
+                background: "#35311f",
+                borderRadius: 14,
+                padding: "8px",
                 backdropFilter: "blur(12px)",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
               }}
@@ -188,6 +193,7 @@ export default function Navbar() {
                   {p.label}
                 </Link>
               ))}
+            </div>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
+import Link from "next/link";
 
 interface CardDef {
   col: number;
@@ -9,22 +10,23 @@ interface CardDef {
   h: number;
   src: string;
   name: string;
+  slug: string;
   row: number;
 }
 
 const ROW1_CARDS: CardDef[] = [
-  { row: 1, col: 1, align: "center",     w: 300, h: 450, src: "/images/proj-01.jpg", name: "Mühlenberg Bad" },
-  { row: 1, col: 2, align: "flex-start", w: 240, h: 160, src: "/images/proj-04.jpg", name: "Seeblick Pool" },
-  { row: 1, col: 3, align: "flex-end",   w: 240, h: 360, src: "/images/proj-06.jpg", name: "Lindenallee Wohnen" },
-  { row: 1, col: 4, align: "center",     w: 360, h: 240, src: "/images/proj-05.jpg", name: "Waldstraße Küche" },
-  { row: 1, col: 5, align: "flex-start", w: 300, h: 450, src: "/images/proj-02.jpg", name: "Seestraße Terrasse" },
-  { row: 1, col: 6, align: "flex-end",   w: 450, h: 300, src: "/images/proj-03.jpg", name: "Bergkamp Bad" },
-  { row: 1, col: 7, align: "center",     w: 160, h: 240, src: "/images/proj-07.jpg", name: "Kalkstein Fassade" },
+  { row: 1, col: 1, align: "center",     w: 300, h: 450, src: "/images/proj-01.jpg", name: "Mühlenberg Bad",     slug: "muehlenberg-bad" },
+  { row: 1, col: 2, align: "flex-start", w: 240, h: 160, src: "/images/proj-04.jpg", name: "Seeblick Pool",       slug: "seeblick-pool" },
+  { row: 1, col: 3, align: "flex-end",   w: 240, h: 360, src: "/images/proj-06.jpg", name: "Lindenallee Wohnen",  slug: "lindenallee-wohnen" },
+  { row: 1, col: 4, align: "center",     w: 360, h: 240, src: "/images/proj-05.jpg", name: "Waldstraße Küche",    slug: "waldstrase-kueche" },
+  { row: 1, col: 5, align: "flex-start", w: 300, h: 450, src: "/images/proj-02.jpg", name: "Seestraße Terrasse",  slug: "seestrase-terrasse" },
+  { row: 1, col: 6, align: "flex-end",   w: 450, h: 300, src: "/images/proj-03.jpg", name: "Bergkamp Bad",        slug: "bergkamp-bad" },
+  { row: 1, col: 7, align: "center",     w: 160, h: 240, src: "/images/proj-07.jpg", name: "Kalkstein Fassade",   slug: "kalkstein-fassade" },
 ];
 
 const ROW2_CARDS: CardDef[] = [
-  { row: 2, col: 1, align: "flex-start", w: 240, h: 160, src: "/images/proj-08.jpg", name: "Panorama Dusche" },
-  { row: 2, col: 2, align: "flex-end",   w: 240, h: 360, src: "/images/proj-09.jpg", name: "Eichenweg Küche" },
+  { row: 2, col: 1, align: "flex-start", w: 240, h: 160, src: "/images/proj-08.jpg", name: "Panorama Dusche",     slug: "panorama-dusche" },
+  { row: 2, col: 2, align: "flex-end",   w: 240, h: 360, src: "/images/proj-09.jpg", name: "Eichenweg Küche",     slug: "eichenweg-kueche" },
 ];
 
 function SplitText({ text, baseDelay = 0 }: { text: string; baseDelay?: number }) {
@@ -56,13 +58,14 @@ function CardItem({
 }: {
   card: CardDef;
   index: number;
-  cardRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
+  cardRefs: React.MutableRefObject<(HTMLAnchorElement | null)[]>;
   imgRefs: React.MutableRefObject<(HTMLImageElement | null)[]>;
   onCardEnter: (i: number) => void;
   onCardLeave: (i: number) => void;
 }) {
   return (
-    <div
+    <Link
+      href={`/projekte/${card.slug}`}
       ref={el => { cardRefs.current[index] = el; }}
       onMouseEnter={() => onCardEnter(index)}
       onMouseLeave={() => onCardLeave(index)}
@@ -78,6 +81,8 @@ function CardItem({
         cursor: "pointer",
         zIndex: 2,
         position: "relative",
+        display: "block",
+        textDecoration: "none",
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -118,7 +123,7 @@ function CardItem({
           {card.name}
         </span>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -147,8 +152,10 @@ export default function Hero() {
   const velY  = useRef(0);
   const prevX = useRef(0);
   const prevY = useRef(0);
+  const movedDistance = useRef(0);
+  const wasDragging = useRef(false);
 
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const imgRefs  = useRef<(HTMLImageElement | null)[]>([]);
   const rafId    = useRef<number | null>(null);
 
@@ -209,6 +216,8 @@ export default function Hero() {
     prevY.current     = e.clientY;
     velX.current      = 0;
     velY.current      = 0;
+    movedDistance.current = 0;
+    wasDragging.current = false;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     if (wrapRef.current) wrapRef.current.style.cursor = "grabbing";
   }, []);
@@ -217,6 +226,8 @@ export default function Hero() {
     if (!dragging.current) return;
     const dx = e.clientX - startPtrX.current;
     const dy = e.clientY - startPtrY.current;
+    movedDistance.current = Math.max(movedDistance.current, Math.abs(dx) + Math.abs(dy));
+    if (movedDistance.current > 6) wasDragging.current = true;
     tgtX.current = clamp(startTgtX.current + dx, -(halfW / 2), halfW / 2);
     tgtY.current = clamp(startTgtY.current + dy, -(halfH / 2), halfH / 2);
     velX.current = e.clientX - prevX.current;
@@ -229,6 +240,14 @@ export default function Hero() {
   const onPointerUp = useCallback(() => {
     dragging.current = false;
     if (wrapRef.current) wrapRef.current.style.cursor = "grab";
+  }, []);
+
+  const onClickCapture = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (wasDragging.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      wasDragging.current = false;
+    }
   }, []);
 
   const onCardEnter = useCallback((i: number) => {
@@ -263,6 +282,7 @@ export default function Hero() {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onClickCapture={onClickCapture}
         style={{
           position:    "fixed",
           inset:       0,
