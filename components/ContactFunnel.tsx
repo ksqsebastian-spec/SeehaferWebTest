@@ -9,26 +9,28 @@ const EASE = "cubic-bezier(0.85, 0.09, 0.15, 0.91)";
 const POP = "cubic-bezier(0.16, 1, 0.3, 1)";
 const TAN = "#9b926a";
 const CREAM = "#ebe8e2";
-const BROWN = "#35311f";
+const INK = "#0c0b07";   // near-black, warm undertone
+const HAIR = "rgba(12,11,7,0.12)";
+const MUTED = "rgba(12,11,7,0.5)";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Funnel data
    ────────────────────────────────────────────────────────────────────────── */
 type ProjectKind = { id: string; label: string; image: string };
-type Pill = { id: string; label: string; hint?: string };
+type Pill = { id: string; label: string };
 
 const PROJECT_KINDS: ProjectKind[] = [
-  { id: "bad",       label: "Badezimmer",   image: "/images/proj-01.jpg" },
-  { id: "kueche",    label: "Küche",        image: "/images/proj-05.jpg" },
-  { id: "terrasse",  label: "Terrasse",     image: "/images/proj-02.jpg" },
-  { id: "stein",     label: "Naturstein",   image: "/images/proj-07.jpg" },
+  { id: "bad",      label: "Badezimmer", image: "/images/proj-01.jpg" },
+  { id: "kueche",   label: "Küche",      image: "/images/proj-05.jpg" },
+  { id: "terrasse", label: "Terrasse",   image: "/images/proj-02.jpg" },
+  { id: "stein",    label: "Naturstein", image: "/images/proj-07.jpg" },
 ];
 
 const TIMELINES: Pill[] = [
-  { id: "now",   label: "Diesen Monat",  hint: "Sofortiger Start" },
-  { id: "3m",    label: "In 3 Monaten",  hint: "Bald planen"      },
-  { id: "6m",    label: "In 6 Monaten",  hint: "Mit Vorlauf"      },
-  { id: "later", label: "Später",        hint: "Erstmal informieren" },
+  { id: "now",   label: "Sobald möglich" },
+  { id: "3m",    label: "In drei Monaten" },
+  { id: "6m",    label: "Im Halbjahr" },
+  { id: "later", label: "Noch unverbindlich" },
 ];
 
 const BUDGETS: Pill[] = [
@@ -222,7 +224,7 @@ export default function ContactFunnel() {
           gap: 14,
           padding: "14px 22px 14px 26px",
           border: "none",
-          background: BROWN,
+          background: INK,
           color: "#fff",
           borderRadius: 999,
           fontFamily: "inherit",
@@ -235,12 +237,12 @@ export default function ContactFunnel() {
           willChange: "transform, opacity",
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "#2c2a1a";
+          (e.currentTarget as HTMLElement).style.background = "#1f1d14";
           (e.currentTarget as HTMLElement).style.boxShadow =
             "0 18px 40px rgba(25,23,14,0.28), 0 3px 8px rgba(25,23,14,0.2)";
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.background = BROWN;
+          (e.currentTarget as HTMLElement).style.background = INK;
           (e.currentTarget as HTMLElement).style.boxShadow =
             "0 14px 34px rgba(25,23,14,0.22), 0 2px 6px rgba(25,23,14,0.16)";
         }}
@@ -360,15 +362,18 @@ export default function ContactFunnel() {
               {/* Step counter */}
               <div
                 style={{
-                  fontSize: 11,
-                  letterSpacing: "0.14em",
+                  fontSize: 10,
+                  letterSpacing: "0.24em",
                   textTransform: "uppercase",
-                  color: "rgba(53,49,31,0.5)",
+                  color: MUTED,
                   whiteSpace: "nowrap",
+                  fontVariantNumeric: "tabular-nums",
                 }}
               >
                 {step < TOTAL_STEPS - 1
-                  ? `Schritt ${step + 1} / ${TOTAL_STEPS - 1}`
+                  ? `${String(step + 1).padStart(2, "0")} / ${String(
+                      TOTAL_STEPS - 1
+                    ).padStart(2, "0")}`
                   : "Geschafft"}
               </div>
 
@@ -377,7 +382,7 @@ export default function ContactFunnel() {
                 style={{
                   flex: 1,
                   height: 2,
-                  background: "rgba(53,49,31,0.12)",
+                  background: "rgba(12,11,7,0.12)",
                   borderRadius: 2,
                   overflow: "hidden",
                 }}
@@ -402,17 +407,17 @@ export default function ContactFunnel() {
                   width: 36,
                   height: 36,
                   borderRadius: 999,
-                  border: "1px solid rgba(53,49,31,0.18)",
+                  border: "1px solid rgba(12,11,7,0.18)",
                   background: "transparent",
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: BROWN,
+                  color: INK,
                   transition: "background 0.2s ease, transform 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.background =
-                    "rgba(53,49,31,0.08)";
+                    "rgba(12,11,7,0.08)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.background = "transparent";
@@ -464,9 +469,9 @@ export default function ContactFunnel() {
                     {i === 1 && (
                       <StepPills
                         revealKey={revealKeys[1]}
-                        eyebrow="02 · Zeitrahmen"
+                        eyebrow="02 / Zeitrahmen"
                         title="Wann soll es losgehen?"
-                        subtitle="Damit wir Werkstatt und Kalender abstimmen."
+                        subtitle="Damit wir den Auftrag in die Werkstatt einplanen."
                         options={TIMELINES}
                         selected={timeline}
                         onSelect={(id) => choose(setTimeline, id, 1)}
@@ -475,9 +480,9 @@ export default function ContactFunnel() {
                     {i === 2 && (
                       <StepPills
                         revealKey={revealKeys[2]}
-                        eyebrow="03 · Budgetrahmen"
+                        eyebrow="03 / Rahmen"
                         title="In welchem Rahmen?"
-                        subtitle="Eine grobe Spanne genügt — alles vertraulich."
+                        subtitle="Eine ungefähre Spanne reicht aus."
                         options={BUDGETS}
                         selected={budget}
                         onSelect={(id) => choose(setBudget, id, 2)}
@@ -518,7 +523,7 @@ export default function ContactFunnel() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "18px 28px 24px",
-                borderTop: "1px solid rgba(53,49,31,0.08)",
+                borderTop: "1px solid rgba(12,11,7,0.08)",
                 background: "rgba(235,232,226,0.6)",
               }}
             >
@@ -533,7 +538,7 @@ export default function ContactFunnel() {
                   padding: "10px 16px",
                   border: "none",
                   background: "transparent",
-                  color: BROWN,
+                  color: INK,
                   fontFamily: "inherit",
                   fontSize: 12,
                   letterSpacing: "0.1em",
@@ -575,7 +580,7 @@ export default function ContactFunnel() {
                     padding: "10px 16px",
                     border: "none",
                     background: "transparent",
-                    color: "rgba(53,49,31,0.5)",
+                    color: "rgba(12,11,7,0.5)",
                     fontFamily: "inherit",
                     fontSize: 12,
                     letterSpacing: "0.1em",
@@ -583,11 +588,11 @@ export default function ContactFunnel() {
                     transition: "color 0.2s ease",
                   }}
                   onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLElement).style.color = BROWN)
+                    ((e.currentTarget as HTMLElement).style.color = INK)
                   }
                   onMouseLeave={(e) =>
                     ((e.currentTarget as HTMLElement).style.color =
-                      "rgba(53,49,31,0.5)")
+                      "rgba(12,11,7,0.5)")
                   }
                 >
                   Überspringen
@@ -622,22 +627,23 @@ function StepProject({
 }) {
   return (
     <div style={{ padding: "40px 44px 32px", height: "100%", display: "flex", flexDirection: "column" }}>
-      <Eyebrow text="01 · Ihr Vorhaben" />
+      <Eyebrow text="01 / Vorhaben" />
       <Headline key={revealKey} text="Was haben Sie vor?" />
-      <Subtitle text="Wählen Sie die Kategorie, die Ihrem Projekt am nächsten kommt." />
+      <Subtitle text="Eine grobe Richtung — Details klären wir im Gespräch." />
 
       <div
         style={{
-          marginTop: 32,
+          marginTop: 40,
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 18,
+          gap: 16,
           flex: 1,
         }}
       >
         {PROJECT_KINDS.map((k, i) => {
           const isSelected = selected === k.id;
           const isFaded = selected !== null && !isSelected;
+          const num = String(i + 1).padStart(2, "0");
           return (
             <button
               type="button"
@@ -646,20 +652,20 @@ function StepProject({
               style={{
                 position: "relative",
                 overflow: "hidden",
-                borderRadius: 18,
+                borderRadius: 4,
                 border: "none",
                 padding: 0,
                 cursor: "pointer",
-                background: "#000",
+                background: INK,
                 aspectRatio: "3 / 4",
-                opacity: isFaded ? 0.35 : 1,
-                transform: isSelected ? "scale(1.02)" : "scale(1)",
-                transition: `opacity 0.4s ${EASE}, transform 0.5s ${EASE}, box-shadow 0.4s ${EASE}`,
+                opacity: isFaded ? 0.32 : 1,
+                transform: isSelected ? "translateY(-3px)" : "translateY(0)",
+                transition: `opacity 0.4s ${EASE}, transform 0.55s ${EASE}, box-shadow 0.4s ${EASE}`,
                 boxShadow: isSelected
-                  ? `0 0 0 2px ${TAN}, 0 16px 32px rgba(25,23,14,0.25)`
-                  : "0 6px 16px rgba(25,23,14,0.12)",
+                  ? `inset 0 0 0 1.5px ${TAN}, 0 18px 36px rgba(12,11,7,0.32)`
+                  : "0 6px 16px rgba(12,11,7,0.14)",
                 animation: `cfRiseIn 0.7s ${EASE} both`,
-                animationDelay: `${0.15 + i * 0.06}s`,
+                animationDelay: `${0.18 + i * 0.07}s`,
               }}
               onMouseEnter={(e) => {
                 const img = (e.currentTarget as HTMLElement).querySelector("img");
@@ -689,11 +695,39 @@ function StepProject({
                   position: "absolute",
                   inset: 0,
                   background:
-                    "linear-gradient(to bottom, transparent 40%, rgba(25,23,14,0.72) 100%)",
+                    "linear-gradient(to bottom, transparent 36%, rgba(12,11,7,0.78) 100%)",
                   pointerEvents: "none",
                 }}
               />
-              {/* Label */}
+
+              {/* Top: tan numeral */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  top: 14,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 10,
+                  letterSpacing: "0.24em",
+                  textTransform: "uppercase",
+                  color: isSelected ? TAN : "rgba(255,255,255,0.85)",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                <span>{num}</span>
+                <span
+                  aria-hidden
+                  style={{
+                    width: 14,
+                    height: 1,
+                    background: isSelected ? TAN : "rgba(255,255,255,0.6)",
+                  }}
+                />
+              </div>
+
+              {/* Bottom label + indicator */}
               <div
                 style={{
                   position: "absolute",
@@ -701,34 +735,50 @@ function StepProject({
                   right: 16,
                   bottom: 16,
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-end",
                   justifyContent: "space-between",
+                  gap: 10,
                   color: "#fff",
-                  fontSize: 15,
-                  fontWeight: 400,
-                  letterSpacing: "-0.005em",
                 }}
               >
-                <span>{k.label}</span>
                 <span
                   style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 999,
-                    border: `1.5px solid ${isSelected ? TAN : "rgba(255,255,255,0.7)"}`,
-                    background: isSelected ? TAN : "transparent",
+                    fontSize: 18,
+                    fontWeight: 300,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {k.label}
+                </span>
+                <span
+                  aria-hidden
+                  style={{
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    transition: `background 0.3s ease, border-color 0.3s ease`,
+                    width: 22,
+                    height: 22,
+                    color: isSelected ? TAN : "rgba(255,255,255,0.85)",
+                    transition: "color 0.3s ease",
                   }}
                 >
-                  {isSelected && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  {isSelected ? (
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <path
-                        d="M1.5 5.2L4 7.7l4.5-5"
-                        stroke="#19170e"
-                        strokeWidth="1.6"
+                        d="M2 7.5l3.2 3.2L12 4"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg width="14" height="10" viewBox="0 0 16 12" fill="none">
+                      <path
+                        d="M1 6h13M9 1l5 5-5 5"
+                        stroke="currentColor"
+                        strokeWidth="1.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
@@ -772,97 +822,161 @@ function StepPills({
 
       <div
         style={{
-          marginTop: 32,
+          marginTop: 40,
           display: "grid",
           gridTemplateColumns: "repeat(2, 1fr)",
           gap: 14,
         }}
       >
-        {options.map((o, i) => {
-          const isSelected = selected === o.id;
-          return (
-            <button
-              type="button"
-              key={o.id}
-              onClick={() => onSelect(o.id)}
-              style={{
-                position: "relative",
-                textAlign: "left",
-                padding: "20px 22px",
-                borderRadius: 16,
-                border: `1px solid ${isSelected ? TAN : "rgba(53,49,31,0.15)"}`,
-                background: isSelected ? "rgba(155,146,106,0.12)" : "rgba(255,255,255,0.5)",
-                color: BROWN,
-                fontFamily: "inherit",
-                cursor: "pointer",
-                transition: `background 0.3s ease, border-color 0.3s ease, transform 0.3s ${EASE}`,
-                transform: isSelected ? "translateY(-2px)" : "translateY(0)",
-                animation: `cfRiseIn 0.6s ${EASE} both`,
-                animationDelay: `${0.15 + i * 0.06}s`,
-              }}
-              onMouseEnter={(e) => {
-                if (!isSelected) {
-                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.85)";
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(53,49,31,0.3)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isSelected) {
-                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.5)";
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(53,49,31,0.15)";
-                }
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 18, fontWeight: 400, letterSpacing: "-0.005em" }}>
-                    {o.label}
-                  </span>
-                  {o.hint && (
-                    <span style={{ fontSize: 12, color: "rgba(53,49,31,0.5)" }}>
-                      {o.hint}
-                    </span>
-                  )}
-                </div>
-                <span
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 999,
-                    border: `1.5px solid ${isSelected ? TAN : "rgba(53,49,31,0.25)"}`,
-                    background: isSelected ? TAN : "transparent",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: `background 0.3s ease, border-color 0.3s ease`,
-                    flexShrink: 0,
-                  }}
-                >
-                  {isSelected && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path
-                        d="M1.5 5.2L4 7.7l4.5-5"
-                        stroke="#19170e"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+        {options.map((o, i) => (
+          <OptionCard
+            key={o.id}
+            index={i}
+            num={String(i + 1).padStart(2, "0")}
+            label={o.label}
+            selected={selected === o.id}
+            onClick={() => onSelect(o.id)}
+          />
+        ))}
       </div>
     </div>
+  );
+}
+
+function OptionCard({
+  index,
+  num,
+  label,
+  selected,
+  onClick,
+}: {
+  index: number;
+  num: string;
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        position: "relative",
+        textAlign: "left",
+        padding: "26px 28px 24px",
+        borderRadius: 4,
+        border: `1px solid ${selected ? "rgba(155,146,106,0.6)" : HAIR}`,
+        background: selected ? "rgba(155,146,106,0.10)" : "transparent",
+        color: INK,
+        fontFamily: "inherit",
+        cursor: "pointer",
+        overflow: "hidden",
+        transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}`,
+        animation: `cfRiseIn 0.7s ${EASE} both`,
+        animationDelay: `${0.18 + index * 0.07}s`,
+      }}
+    >
+      {/* Tan accent bar — slides in from top when selected */}
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 2,
+          background: TAN,
+          transformOrigin: "top",
+          transform: `scaleY(${selected ? 1 : 0})`,
+          transition: `transform 0.55s ${POP}`,
+        }}
+      />
+
+      {/* Number + dash eyebrow */}
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          fontSize: 10,
+          letterSpacing: "0.24em",
+          textTransform: "uppercase",
+          color: selected ? TAN : MUTED,
+          fontVariantNumeric: "tabular-nums",
+          marginBottom: 18,
+          transition: "color 0.3s ease",
+        }}
+      >
+        <span>{num}</span>
+        <span
+          aria-hidden
+          style={{
+            width: hover || selected ? 22 : 14,
+            height: 1,
+            background: selected ? TAN : "rgba(12,11,7,0.3)",
+            display: "inline-block",
+            transition: `width 0.45s ${POP}, background 0.3s ease`,
+          }}
+        />
+      </div>
+
+      {/* Label */}
+      <div
+        style={{
+          fontSize: "clamp(20px, 1.7vw, 24px)",
+          fontWeight: 300,
+          color: INK,
+          letterSpacing: "-0.025em",
+          lineHeight: 1.1,
+        }}
+      >
+        {label}
+      </div>
+
+      {/* Bottom-right: arrow → check on select. */}
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          right: 22,
+          bottom: 22,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 26,
+          height: 26,
+          opacity: hover || selected ? 1 : 0.25,
+          transform: `translateX(${hover && !selected ? 3 : 0}px)`,
+          transition: `opacity 0.3s ease, transform 0.35s ${POP}`,
+          color: selected ? TAN : INK,
+        }}
+      >
+        {selected ? (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M2 7.5l3.2 3.2L12 4"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ) : (
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path
+              d="M1 6h13M9 1l5 5-5 5"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
+      </span>
+    </button>
   );
 }
 
@@ -894,9 +1008,9 @@ function StepContact({
 }) {
   return (
     <div style={{ padding: "40px 44px 32px", height: "100%", display: "flex", flexDirection: "column" }}>
-      <Eyebrow text="04 · Kontaktdaten" />
-      <Headline key={revealKey} text="Wer dürfen wir kontaktieren?" />
-      <Subtitle text="Wir melden uns innerhalb von 24 Stunden zurück." />
+      <Eyebrow text="04 / Kontakt" />
+      <Headline key={revealKey} text="Wie erreichen wir Sie?" />
+      <Subtitle text="Wir melden uns persönlich innerhalb eines Werktags." />
 
       <form
         onSubmit={(e) => {
@@ -960,13 +1074,13 @@ function Field({
     width: "100%",
     border: "none",
     background: "transparent",
-    padding: "26px 2px 8px",
-    fontSize: 18,
+    padding: "28px 2px 10px",
+    fontSize: 19,
     fontFamily: "inherit",
-    fontWeight: 400,
-    color: BROWN,
+    fontWeight: 300,
+    color: INK,
     outline: "none",
-    letterSpacing: "-0.005em",
+    letterSpacing: "-0.02em",
   };
 
   return (
@@ -974,7 +1088,7 @@ function Field({
       style={{
         position: "relative",
         display: "block",
-        borderBottom: `1px solid ${focused ? TAN : "rgba(53,49,31,0.2)"}`,
+        borderBottom: `1px solid ${focused ? TAN : "rgba(12,11,7,0.2)"}`,
         transition: "border-color 0.3s ease",
         animation: `cfRiseIn 0.6s ${EASE} both`,
         animationDelay: `${delay}s`,
@@ -984,17 +1098,18 @@ function Field({
         style={{
           position: "absolute",
           left: 2,
-          top: lifted ? 4 : 26,
-          fontSize: lifted ? 10 : 16,
-          letterSpacing: lifted ? "0.12em" : "-0.005em",
+          top: lifted ? 4 : 28,
+          fontSize: lifted ? 10 : 17,
+          fontWeight: 300,
+          letterSpacing: lifted ? "0.22em" : "-0.015em",
           textTransform: lifted ? "uppercase" : "none",
-          color: lifted ? TAN : "rgba(53,49,31,0.45)",
-          transition: `top 0.35s ${POP}, font-size 0.35s ${POP}, color 0.3s ease, letter-spacing 0.3s ease`,
+          color: lifted ? TAN : "rgba(12,11,7,0.42)",
+          transition: `top 0.4s ${POP}, font-size 0.4s ${POP}, color 0.3s ease, letter-spacing 0.4s ${POP}`,
           pointerEvents: "none",
         }}
       >
         {label}
-        {required && <span aria-hidden> *</span>}
+        {required && <span aria-hidden style={{ color: TAN }}> *</span>}
       </span>
       {multiline ? (
         <textarea
@@ -1039,8 +1154,8 @@ function SubmitButton({
         gap: 10,
         padding: "12px 22px",
         border: "none",
-        background: disabled ? "rgba(53,49,31,0.15)" : BROWN,
-        color: disabled ? "rgba(53,49,31,0.5)" : "#fff",
+        background: disabled ? "rgba(12,11,7,0.15)" : INK,
+        color: disabled ? "rgba(12,11,7,0.5)" : "#fff",
         borderRadius: 999,
         fontFamily: "inherit",
         fontSize: 12,
@@ -1116,7 +1231,7 @@ function StepThanks({
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
           <path
             d="M9 18.5l6 6L27 12.5"
-            stroke={BROWN}
+            stroke={INK}
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -1131,12 +1246,12 @@ function StepThanks({
 
       <div
         style={{
-          fontSize: "clamp(36px, 5vw, 56px)",
-          fontWeight: 400,
-          color: BROWN,
-          letterSpacing: "-0.015em",
-          lineHeight: 1.05,
-          marginBottom: 14,
+          fontSize: "clamp(40px, 5.4vw, 64px)",
+          fontWeight: 300,
+          color: INK,
+          letterSpacing: "-0.035em",
+          lineHeight: 1.02,
+          marginBottom: 16,
           overflow: "hidden",
         }}
       >
@@ -1144,16 +1259,18 @@ function StepThanks({
       </div>
       <p
         style={{
-          fontSize: 17,
-          color: "rgba(53,49,31,0.65)",
-          maxWidth: 460,
-          lineHeight: 1.45,
-          marginBottom: 32,
+          fontSize: 16,
+          fontWeight: 300,
+          color: MUTED,
+          maxWidth: 480,
+          lineHeight: 1.5,
+          letterSpacing: "-0.01em",
+          marginBottom: 36,
           animation: `cfRiseIn 0.7s ${EASE} 0.5s both`,
         }}
       >
-        Ihre Anfrage ist eingegangen. Wir melden uns innerhalb von 24&nbsp;Stunden
-        persönlich bei Ihnen.
+        Ihre Anfrage liegt bei uns. Wir melden uns persönlich innerhalb eines
+        Werktags.
       </p>
 
       <button
@@ -1162,7 +1279,7 @@ function StepThanks({
         style={{
           padding: "12px 22px",
           border: "none",
-          background: BROWN,
+          background: INK,
           color: "#fff",
           borderRadius: 999,
           fontFamily: "inherit",
@@ -1175,10 +1292,10 @@ function StepThanks({
           transition: `background 0.3s ease`,
         }}
         onMouseEnter={(e) =>
-          ((e.currentTarget as HTMLElement).style.background = "#2c2a1a")
+          ((e.currentTarget as HTMLElement).style.background = "#1f1d14")
         }
         onMouseLeave={(e) =>
-          ((e.currentTarget as HTMLElement).style.background = BROWN)
+          ((e.currentTarget as HTMLElement).style.background = INK)
         }
       >
         Schließen
@@ -1191,17 +1308,35 @@ function StepThanks({
    Shared step typography
    ────────────────────────────────────────────────────────────────────────── */
 function Eyebrow({ text }: { text: string }) {
+  // Split "02 / Zeitrahmen" so the numeral can be styled separately
+  const [num, ...rest] = text.split(" / ");
+  const label = rest.join(" / ");
   return (
     <div
       style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 10,
         fontSize: 11,
-        letterSpacing: "0.18em",
+        letterSpacing: "0.22em",
         textTransform: "uppercase",
         color: TAN,
-        marginBottom: 14,
+        marginBottom: 18,
+        fontWeight: 400,
       }}
     >
-      {text}
+      <span style={{ fontVariantNumeric: "tabular-nums" }}>{num}</span>
+      <span
+        aria-hidden
+        style={{
+          width: 18,
+          height: 1,
+          background: TAN,
+          opacity: 0.6,
+          display: "inline-block",
+        }}
+      />
+      <span>{label}</span>
     </div>
   );
 }
@@ -1210,12 +1345,12 @@ function Headline({ text }: { text: string }) {
   return (
     <h2
       style={{
-        fontSize: "clamp(34px, 4.4vw, 52px)",
-        fontWeight: 400,
-        color: BROWN,
-        letterSpacing: "-0.015em",
-        lineHeight: 1.05,
-        marginBottom: 10,
+        fontSize: "clamp(36px, 4.6vw, 56px)",
+        fontWeight: 300,
+        color: INK,
+        letterSpacing: "-0.035em",
+        lineHeight: 1.02,
+        marginBottom: 12,
         overflow: "hidden",
       }}
     >
@@ -1229,9 +1364,11 @@ function Subtitle({ text }: { text: string }) {
     <p
       style={{
         fontSize: 15,
-        color: "rgba(53,49,31,0.55)",
+        fontWeight: 300,
+        color: MUTED,
         maxWidth: 540,
-        lineHeight: 1.45,
+        lineHeight: 1.5,
+        letterSpacing: "-0.005em",
         animation: `cfRiseIn 0.7s ${EASE} 0.25s both`,
       }}
     >
