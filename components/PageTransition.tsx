@@ -23,7 +23,6 @@ export default function PageTransition() {
     };
 
     const onClick = (e: MouseEvent) => {
-      if (e.defaultPrevented) return;
       if (e.button !== 0) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
@@ -37,11 +36,16 @@ export default function PageTransition() {
       if (!href || href.startsWith("#")) return;
       if (!href.startsWith("/") || href.startsWith("//")) return;
 
+      // Escape hatch for any link that wants the default behavior
+      if (link.hasAttribute("data-no-transition")) return;
+
       // Same-page link — let it through
       const pathOnly = href.split("#")[0].split("?")[0];
       if (pathOnly === pathname) return;
 
+      // Stop Next.js Link from also handling this click.
       e.preventDefault();
+      e.stopPropagation();
 
       // Going to/from "/" → white cross-fade; otherwise slide up
       const isHomeMove = pathOnly === "/" || pathname === "/";
@@ -61,9 +65,11 @@ export default function PageTransition() {
       );
     };
 
-    document.addEventListener("click", onClick);
+    // Capture phase so we run before Next.js Link's own onClick handler,
+    // which otherwise calls preventDefault and starts navigating immediately.
+    document.addEventListener("click", onClick, { capture: true });
     return () => {
-      document.removeEventListener("click", onClick);
+      document.removeEventListener("click", onClick, { capture: true });
       clearTimers();
     };
   }, [pathname, router]);
