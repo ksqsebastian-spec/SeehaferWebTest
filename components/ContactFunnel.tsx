@@ -148,10 +148,16 @@ export default function ContactFunnel() {
 
   /* Hover/commit preview — the image shows only while previewing or
      while a selection is being committed (reveal moment). Otherwise
-     the step's base color is visible. */
+     the step's base color is visible.
+     Exception: on the thanks screen we keep the selected project's
+     image as the backdrop so the close-out feels celebratory. */
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [revealing, setRevealing] = useState(false);
   const stepColor = STEP_COLORS[step] ?? "#ebe8e2";
+
+  const projectImage = PROJECT_KINDS.find((p) => p.id === project)?.image;
+  const isThanks = step === 3;
+  const effectivePreview = previewImage ?? (isThanks ? projectImage ?? null : null);
 
   /* CTA reveal after hero intro */
   useEffect(() => {
@@ -384,35 +390,35 @@ export default function ContactFunnel() {
                   ? "blur(30px) saturate(1.3)"
                   : "blur(52px) saturate(1.2)",
                 transform: `scale(${revealing ? 1.06 : 1.16})`,
-                opacity: previewImage === src ? 1 : 0,
+                opacity: effectivePreview === src ? 1 : 0,
                 transition: `opacity 0.9s ${EASE}, transform 1.6s ${EASE}, filter 1.2s ${EASE}`,
               }}
             />
           ))}
 
-          {/* Milky wash — full when at rest (color soft), thins on
-              hover so the image reads through, lifts further on
-              commit so it "ports" you through. */}
+          {/* Milky wash — full enough to keep things soft, but thinner
+              than before so the color reads more. Thins further on
+              hover so the image comes through clearly. */}
           <div
             aria-hidden
             style={{
               position: "absolute",
               inset: 0,
               background: revealing
-                ? "linear-gradient(180deg, rgba(245,243,238,0.28) 0%, rgba(235,232,226,0.24) 50%, rgba(245,243,238,0.32) 100%)"
-                : previewImage
-                ? "linear-gradient(180deg, rgba(245,243,238,0.4) 0%, rgba(235,232,226,0.36) 50%, rgba(245,243,238,0.44) 100%)"
-                : "linear-gradient(180deg, rgba(245,243,238,0.55) 0%, rgba(235,232,226,0.5) 50%, rgba(245,243,238,0.58) 100%)",
+                ? "linear-gradient(180deg, rgba(245,243,238,0.24) 0%, rgba(235,232,226,0.2) 50%, rgba(245,243,238,0.28) 100%)"
+                : effectivePreview
+                ? "linear-gradient(180deg, rgba(245,243,238,0.32) 0%, rgba(235,232,226,0.28) 50%, rgba(245,243,238,0.36) 100%)"
+                : "linear-gradient(180deg, rgba(245,243,238,0.4) 0%, rgba(235,232,226,0.36) 50%, rgba(245,243,238,0.44) 100%)",
               backdropFilter: revealing
                 ? "blur(3px) saturate(1.05)"
-                : previewImage
-                ? "blur(5px) saturate(1.1)"
-                : "blur(10px) saturate(1.15)",
+                : effectivePreview
+                ? "blur(4px) saturate(1.1)"
+                : "blur(7px) saturate(1.15)",
               WebkitBackdropFilter: revealing
                 ? "blur(3px) saturate(1.05)"
-                : previewImage
-                ? "blur(5px) saturate(1.1)"
-                : "blur(10px) saturate(1.15)",
+                : effectivePreview
+                ? "blur(4px) saturate(1.1)"
+                : "blur(7px) saturate(1.15)",
               transition: `background 0.6s ${EASE}, backdrop-filter 0.6s ${EASE}, -webkit-backdrop-filter 0.6s ${EASE}`,
             }}
           />
@@ -424,12 +430,16 @@ export default function ContactFunnel() {
               position: "absolute",
               inset: 0,
               backgroundImage: "url(/tile-bg.svg)",
-              opacity: revealing ? 0.06 : previewImage ? 0.1 : 0.16,
+              opacity: revealing ? 0.06 : effectivePreview ? 0.1 : 0.16,
               mixBlendMode: "multiply",
               pointerEvents: "none",
               transition: `opacity 0.6s ${EASE}`,
             }}
           />
+
+          {/* Decorative glass orbs — only on thanks step, drift in to
+              celebrate completion */}
+          <DecorativeOrbs visible={isThanks} />
 
           {/* Close */}
           <button
@@ -564,6 +574,8 @@ export default function ContactFunnel() {
                   <ThanksStep
                     revealKey={revealKeys[3]}
                     name={name}
+                    project={project}
+                    timeline={timeline}
                     onClose={handleClose}
                   />
                 )}
@@ -707,22 +719,38 @@ function Question({
   align?: "left" | "right" | "center";
 }) {
   return (
-    <h2
+    <div
       style={{
-        fontSize: "clamp(34px, 4.4vw, 56px)",
-        fontWeight: 300,
-        letterSpacing: "-0.035em",
-        lineHeight: 1.04,
-        margin: 0,
-        textAlign: align,
-        color: GHOST,
-        maxWidth: "min(90vw, 560px)",
-        wordSpacing: "0.01em",
-        hyphens: "manual",
+        display: "inline-block",
+        padding: "18px 30px 22px",
+        borderRadius: 28,
+        background: "rgba(255,255,255,0.28)",
+        border: "1px solid rgba(255,255,255,0.55)",
+        backdropFilter: "blur(22px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(12,11,7,0.04), 0 14px 32px rgba(12,11,7,0.1)",
+        maxWidth: "min(92vw, 560px)",
+        alignSelf:
+          align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start",
       }}
     >
-      <FillReveal text={text} delay={0.05} charMs={28} duration={0.5} />
-    </h2>
+      <h2
+        style={{
+          fontSize: "clamp(34px, 4.4vw, 56px)",
+          fontWeight: 300,
+          letterSpacing: "-0.035em",
+          lineHeight: 1.04,
+          margin: 0,
+          textAlign: align,
+          color: GHOST,
+          wordSpacing: "0.01em",
+          hyphens: "manual",
+        }}
+      >
+        <FillReveal text={text} delay={0.05} charMs={28} duration={0.5} />
+      </h2>
+    </div>
   );
 }
 
@@ -1132,34 +1160,49 @@ function Field({
 }
 
 function SubmitButton({ disabled }: { disabled: boolean }) {
+  const [hover, setHover] = useState(false);
   return (
     <button
       type="submit"
       disabled={disabled}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 12,
-        padding: "13px 24px",
-        border: "none",
-        background: disabled ? "rgba(12,11,7,0.18)" : INK,
-        color: disabled ? "rgba(12,11,7,0.5)" : "#fff",
+        gap: 14,
+        padding: "15px 30px",
+        border: `1px solid ${
+          disabled
+            ? "rgba(12,11,7,0.18)"
+            : hover
+            ? "rgba(255,255,255,0.85)"
+            : "rgba(255,255,255,0.55)"
+        }`,
+        background: disabled
+          ? "rgba(255,255,255,0.22)"
+          : hover
+          ? "rgba(255,255,255,0.55)"
+          : "rgba(255,255,255,0.35)",
+        color: disabled ? "rgba(12,11,7,0.4)" : INK,
         borderRadius: 999,
         fontFamily: "inherit",
         fontSize: 12,
         fontWeight: 400,
-        letterSpacing: "0.12em",
+        letterSpacing: "0.14em",
         textTransform: "uppercase",
         cursor: disabled ? "not-allowed" : "pointer",
-        transition: `background 0.3s ease, color 0.3s ease, transform 0.3s ${EASE}`,
-        boxShadow: disabled ? "none" : "0 8px 22px rgba(12,11,7,0.22)",
-      }}
-      onMouseEnter={(e) => {
-        if (!disabled)
-          (e.currentTarget as HTMLElement).style.transform = "translateX(3px)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = "translateX(0)";
+        backdropFilter: "blur(22px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+        boxShadow: disabled
+          ? "none"
+          : hover
+          ? "inset 0 1px 0 rgba(255,255,255,0.85), 0 18px 38px rgba(12,11,7,0.16)"
+          : "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(12,11,7,0.05), 0 12px 28px rgba(12,11,7,0.1)",
+        transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, transform 0.4s ${POP}, box-shadow 0.4s ${EASE}`,
+        transform: `translateY(${disabled ? 0 : hover ? -2 : 0}px) translateX(${
+          hover && !disabled ? 2 : 0
+        }px)`,
       }}
     >
       Anfrage senden
@@ -1182,13 +1225,23 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
 function ThanksStep({
   revealKey,
   name,
+  project,
+  timeline,
   onClose,
 }: {
   revealKey: number;
   name: string;
+  project: string | null;
+  timeline: string | null;
   onClose: () => void;
 }) {
   const firstName = useMemo(() => name.trim().split(/\s+/)[0] || "", [name]);
+  const [closeHover, setCloseHover] = useState(false);
+
+  const projectLabel = PROJECT_KINDS.find((p) => p.id === project)?.label;
+  const timelineLabel = TIMELINES.find((t) => t.id === timeline)?.label;
+  const summary = [projectLabel, timelineLabel].filter(Boolean) as string[];
+
   return (
     <div
       key={revealKey}
@@ -1197,85 +1250,238 @@ function ThanksStep({
         flexDirection: "column",
         alignItems: "center",
         textAlign: "center",
-        gap: 22,
+        gap: 0,
       }}
     >
+      {/* Glass card containing the whole completion message */}
       <div
         style={{
-          width: 78,
-          height: 78,
-          borderRadius: "50%",
-          border: `1.5px solid ${TAN}`,
-          display: "inline-flex",
+          display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          animation: `cfRing 0.9s ${POP} both`,
+          gap: 22,
+          padding: "44px 52px 40px",
+          borderRadius: 32,
+          background: "rgba(255,255,255,0.28)",
+          border: "1px solid rgba(255,255,255,0.55)",
+          backdropFilter: "blur(24px) saturate(1.6)",
+          WebkitBackdropFilter: "blur(24px) saturate(1.6)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(12,11,7,0.05), 0 28px 60px rgba(12,11,7,0.18)",
+          maxWidth: "min(92vw, 520px)",
+          animation: `cfRise 0.8s ${EASE} 0.1s both`,
         }}
       >
-        <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
-          <path
-            d="M9 18.5l6 6L27 12.5"
-            stroke={INK}
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{
-              strokeDasharray: 60,
-              strokeDashoffset: 60,
-              animation: `cfCheck 0.7s ${POP} 0.4s forwards`,
-            }}
+        {/* Check ring */}
+        <div
+          style={{
+            position: "relative",
+            width: 84,
+            height: 84,
+            borderRadius: "50%",
+            border: `1.5px solid ${TAN}`,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(255,255,255,0.35)",
+            backdropFilter: "blur(10px) saturate(1.5)",
+            WebkitBackdropFilter: "blur(10px) saturate(1.5)",
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.7), 0 8px 22px rgba(12,11,7,0.14)",
+            animation: `cfRing 0.9s ${POP} both`,
+          }}
+        >
+          <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
+            <path
+              d="M9 18.5l6 6L27 12.5"
+              stroke={INK}
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                strokeDasharray: 60,
+                strokeDashoffset: 60,
+                animation: `cfCheck 0.7s ${POP} 0.4s forwards`,
+              }}
+            />
+          </svg>
+        </div>
+
+        {/* Heading — fills grey → ink, no surrounding glass (we're
+            already inside a glass card) */}
+        <h2
+          style={{
+            fontSize: "clamp(34px, 4.4vw, 52px)",
+            fontWeight: 300,
+            letterSpacing: "-0.035em",
+            lineHeight: 1.02,
+            margin: 0,
+            color: GHOST,
+          }}
+        >
+          <FillReveal
+            text={firstName ? `Danke, ${firstName}.` : "Danke."}
+            delay={0.2}
+            charMs={32}
+            duration={0.5}
           />
-        </svg>
+        </h2>
+
+        <p
+          style={{
+            fontSize: 15,
+            fontWeight: 300,
+            color: MUTED,
+            maxWidth: 380,
+            lineHeight: 1.5,
+            letterSpacing: "-0.01em",
+            margin: 0,
+            animation: `cfRise 0.7s ${EASE} 0.55s both`,
+          }}
+        >
+          Ihre Anfrage liegt bei uns. Wir melden uns persönlich innerhalb eines
+          Werktags.
+        </p>
+
+        {/* Summary pills — show what they picked */}
+        {summary.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 8,
+              marginTop: 4,
+            }}
+          >
+            {summary.map((s, i) => (
+              <span
+                key={s}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "8px 16px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(255,255,255,0.55)",
+                  background: "rgba(255,255,255,0.32)",
+                  backdropFilter: "blur(14px) saturate(1.5)",
+                  WebkitBackdropFilter: "blur(14px) saturate(1.5)",
+                  color: INK,
+                  fontSize: 12,
+                  fontWeight: 400,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  boxShadow:
+                    "inset 0 1px 0 rgba(255,255,255,0.7), 0 6px 16px rgba(12,11,7,0.08)",
+                  animation: `cfRise 0.6s ${EASE} ${0.7 + i * 0.08}s both`,
+                }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Glass close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          onMouseEnter={() => setCloseHover(true)}
+          onMouseLeave={() => setCloseHover(false)}
+          style={{
+            marginTop: 10,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "13px 26px",
+            border: `1px solid ${
+              closeHover ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)"
+            }`,
+            background: closeHover
+              ? "rgba(255,255,255,0.55)"
+              : "rgba(255,255,255,0.32)",
+            color: INK,
+            borderRadius: 999,
+            fontFamily: "inherit",
+            fontSize: 12,
+            fontWeight: 400,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            cursor: "pointer",
+            backdropFilter: "blur(18px) saturate(1.6)",
+            WebkitBackdropFilter: "blur(18px) saturate(1.6)",
+            boxShadow: closeHover
+              ? "inset 0 1px 0 rgba(255,255,255,0.85), 0 14px 30px rgba(12,11,7,0.14)"
+              : "inset 0 1px 0 rgba(255,255,255,0.7), 0 10px 24px rgba(12,11,7,0.1)",
+            transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, transform 0.4s ${POP}, box-shadow 0.4s ${EASE}`,
+            transform: `translateY(${closeHover ? -2 : 0}px)`,
+            animation: `cfRise 0.7s ${EASE} 0.85s both`,
+          }}
+        >
+          Schließen
+          <svg width="12" height="10" viewBox="0 0 16 14" fill="none">
+            <path
+              d="M1 7h13M8 1l6 6-6 6"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
       </div>
-
-      <Question
-        text={firstName ? `Danke, ${firstName}.` : "Danke."}
-        align="center"
-      />
-      <p
-        style={{
-          fontSize: 15,
-          fontWeight: 300,
-          color: MUTED,
-          maxWidth: 420,
-          lineHeight: 1.5,
-          letterSpacing: "-0.01em",
-          margin: 0,
-          animation: `cfRise 0.7s ${EASE} 0.55s both`,
-        }}
-      >
-        Ihre Anfrage liegt bei uns. Wir melden uns persönlich innerhalb eines
-        Werktags.
-      </p>
-
-      <button
-        type="button"
-        onClick={onClose}
-        style={{
-          marginTop: 8,
-          padding: "11px 22px",
-          border: "none",
-          background: INK,
-          color: "#fff",
-          borderRadius: 999,
-          fontFamily: "inherit",
-          fontSize: 12,
-          fontWeight: 400,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          cursor: "pointer",
-          animation: `cfRise 0.7s ${EASE} 0.75s both`,
-          transition: "background 0.3s ease",
-        }}
-        onMouseEnter={(e) =>
-          ((e.currentTarget as HTMLElement).style.background = "#1f1d14")
-        }
-        onMouseLeave={(e) =>
-          ((e.currentTarget as HTMLElement).style.background = INK)
-        }
-      >
-        Schließen
-      </button>
     </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Decorative floating glass orbs — only shown on the thanks step
+   ────────────────────────────────────────────────────────────────────────── */
+function DecorativeOrbs({ visible }: { visible: boolean }) {
+  const orbs = [
+    { x: 8,  y: 20, size: 200, delay: 0.1, dur: 7,   tint: "rgba(255,255,255,0.55)" },
+    { x: 86, y: 16, size: 120, delay: 0.3, dur: 6.5, tint: "rgba(255,255,255,0.55)" },
+    { x: 14, y: 78, size: 95,  delay: 0.5, dur: 8,   tint: "rgba(255,255,255,0.55)" },
+    { x: 82, y: 80, size: 240, delay: 0.2, dur: 9,   tint: "rgba(255,255,255,0.55)" },
+    { x: 52, y: 10, size: 70,  delay: 0.4, dur: 5.5, tint: "rgba(255,255,255,0.55)" },
+  ];
+
+  return (
+    <>
+      <style>{`
+        @keyframes cfOrbFloat {
+          0%, 100% { transform: translate(-50%, -50%) translateY(-8px); }
+          50%      { transform: translate(-50%, -50%) translateY(8px); }
+        }
+      `}</style>
+      {orbs.map((o, i) => (
+        <div
+          key={i}
+          aria-hidden
+          style={{
+            position: "absolute",
+            left: `${o.x}vw`,
+            top: `${o.y}vh`,
+            width: o.size,
+            height: o.size,
+            borderRadius: "50%",
+            background: `radial-gradient(circle at 30% 25%, ${o.tint} 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.05) 100%)`,
+            border: "1px solid rgba(255,255,255,0.4)",
+            backdropFilter: "blur(8px) saturate(1.3)",
+            WebkitBackdropFilter: "blur(8px) saturate(1.3)",
+            boxShadow:
+              "inset 0 2px 6px rgba(255,255,255,0.7), inset 0 -2px 8px rgba(12,11,7,0.06), 0 12px 28px rgba(12,11,7,0.08)",
+            opacity: visible ? 1 : 0,
+            transform: "translate(-50%, -50%) translateY(0)",
+            transition: `opacity 1.1s ${EASE} ${o.delay}s`,
+            animation: visible
+              ? `cfOrbFloat ${o.dur}s ease-in-out ${o.delay + 1.1}s infinite`
+              : "none",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+      ))}
+    </>
   );
 }
