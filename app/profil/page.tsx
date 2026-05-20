@@ -1,7 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Profile from "@/components/Profile";
 import Footer from "@/components/Footer";
-import Cursor from "@/components/Cursor";
 
 export const metadata = {
   title: "Profil | Seehafer Elemente",
@@ -11,7 +10,6 @@ export const metadata = {
 export default function ProfilPage() {
   return (
     <>
-      <Cursor />
       <Navbar />
       <main>
         <Profile />

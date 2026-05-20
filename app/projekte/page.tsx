@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Projects from "@/components/Projects";
-import Cursor from "@/components/Cursor";
 
 export const metadata = {
   title: "Projekte | Seehafer Elemente",
@@ -10,7 +9,6 @@ export const metadata = {
 export default function ProjektePage() {
   return (
     <>
-      <Cursor />
       <Navbar />
       <main>
         <Projects />

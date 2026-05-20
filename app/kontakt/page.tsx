@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Contact from "@/components/Contact";
-import Cursor from "@/components/Cursor";
 
 export const metadata = {
   title: "Kontakt | Seehafer Elemente",
@@ -10,7 +9,6 @@ export const metadata = {
 export default function KontaktPage() {
   return (
     <>
-      <Cursor />
       <Navbar />
       <main>
         <Contact />

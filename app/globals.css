@@ -75,15 +75,16 @@ main {
   z-index: 9999;
   transform: translate(-50%, -50%);
   transition:
-    width 0.25s var(--easing),
-    height 0.25s var(--easing),
-    border-radius 0.25s var(--easing);
+    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, width, height;
 }
 
 .cursor.is-hovering {
-  width: 8px;
-  height: 32px;
+  width: 6px;
+  height: 24px;
   border-radius: 999px;
 }
 
