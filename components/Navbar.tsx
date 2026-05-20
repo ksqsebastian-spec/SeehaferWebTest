@@ -81,24 +81,43 @@ export default function Navbar() {
           transition: "background 0.4s ease, box-shadow 0.4s ease",
         }}
       >
-        {/* Logo mark — stylized "S" for Seehafer */}
+        {/* Stacked wordmark — ELEMENTE big & white, seehafer signal red below */}
         <Link
           href="/"
           style={{
-            display: "flex",
-            alignItems: "center",
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            justifyContent: "center",
+            lineHeight: 1,
             marginRight: 28,
             textDecoration: "none",
           }}
         >
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <path
-              d="M17 5.5C17 3.57 14.31 2 11 2C7.69 2 5 3.57 5 5.5C5 7.43 7.69 9 11 9C14.31 9 17 10.57 17 12.5C17 14.43 14.31 16 11 16C7.69 16 5 14.43 5 12.5"
-              stroke="#9b926a"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
+          <span
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "#fff",
+              lineHeight: 0.95,
+            }}
+          >
+            Elemente
+          </span>
+          <span
+            style={{
+              fontSize: 8.5,
+              fontWeight: 500,
+              letterSpacing: "0.04em",
+              color: "#e11d2c",
+              marginTop: 2,
+              lineHeight: 1,
+            }}
+          >
+            seehafer
+          </span>
         </Link>
 
         {/* Links */}
